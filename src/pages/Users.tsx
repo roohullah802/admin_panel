@@ -1,6 +1,8 @@
 import { Bell, Trash2, UserCheck2, Users, UsersRoundIcon, ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import Nav from "./Nav";
+import { useGetAllUsersQuery } from "@/redux-toolkit-store/slices/rtk/apiSlices";
+import ClipLoader from "react-spinners/ClipLoader";
 
 type Lease = {
   id: string;
@@ -100,12 +102,18 @@ function IconCard({
   );
 }
 
+
+
+
 export default function User() {
   const [showActive, setShowActive] = useState(true);
   const [showCompleted, setShowCompleted] = useState(false);
 
+  const {data: users, isLoading: isLoadingUsers} = useGetAllUsersQuery(undefined);
+  const allUsers = users?.users;
+  
+
   const user = sampleUsers[0]; 
-  console.log(user);
   
   const activeLeases = user.leases.filter((l) => l.status === "active");
   const completedLeases = user.leases.filter((l) => l.status === "completed");
@@ -134,7 +142,7 @@ export default function User() {
 
           {/* top cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 shrink-0">
-            <IconCard title="Total Users" value="2412K" sub="+8% than last month" Icon={Users} col={"bg-[#51AFF3]"} />
+            <IconCard title="Total Users" value={isLoadingUsers ? <ClipLoader size={18} color="black" loading={isLoadingUsers} /> : allUsers} sub="+8% than last month" Icon={Users} col={"bg-[#51AFF3]"} />
             <IconCard title="New Users" value="100" sub="+5% from yesterday" Icon={UsersRoundIcon} col={"bg-[#019CD0]"} />
             <IconCard title="Active Users" value="901" sub="+2% from yesterday" Icon={UserCheck2} col={"bg-green-800"} />
           </div>

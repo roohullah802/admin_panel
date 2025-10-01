@@ -31,6 +31,24 @@ export const apiSlice = createApi({
     }),
     getOneWeekCars: builder.query({
       query: ()=> '/recent-cars'
+    }),
+    getOneWeekUsers: builder.query({
+      query: ()=> '/new-users'
+    }),
+    getActiveUsers: builder.query({
+      query: ()=> '/active/users'
+    }),
+    getTotalUsers: builder.query({
+      query: ()=> '/all/users'
+    }),
+    deleteUser: builder.mutation({
+      query:(id)=>({
+        url: `/delete/user/${id}`,
+        method:'DELETE'
+      })
+    }),
+    userDetails: builder.query({
+      query:(id)=>`/user/details/${id}`,
     })
 
 
@@ -39,4 +57,4 @@ export const apiSlice = createApi({
 
 })
 
-export const {useGetAllUsersQuery, useGetAllCarsQuery, useGetAllActiveLeasesQuery, useGetAllActivityQuery, useGetOneWeekCarsQuery} = apiSlice;
+export const {useGetAllUsersQuery, useGetAllCarsQuery, useGetAllActiveLeasesQuery, useGetAllActivityQuery, useGetOneWeekCarsQuery, useGetOneWeekUsersQuery, useGetActiveUsersQuery, useGetTotalUsersQuery, useDeleteUserMutation, useUserDetailsQuery} = apiSlice;
