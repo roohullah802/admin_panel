@@ -1,42 +1,66 @@
-import type { RootState } from '@/redux-toolkit-store/store/store';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
+import type { RootState } from "@/redux-toolkit-store/store/store";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const apiSlice = createApi({
-    reducerPath: 'api',
-    baseQuery: fetchBaseQuery({
+  reducerPath: "api",
+  baseQuery: fetchBaseQuery({
     baseUrl: "https://api.citycarcenters.com/api/v1/secure/route/admin",
-    credentials:'include',
-    prepareHeaders: (headers, {getState})=>{
+    credentials: "include",
+    prepareHeaders: (headers, { getState }) => {
       const t = getState() as RootState;
       const token = t.user.userData?.token;
       if (token) {
-        headers.set("authorization", `Bearer ${token}`)
+        headers.set("authorization", `Bearer ${token}`);
       }
-      return headers
-    }
+      return headers;
+    },
   }),
-  endpoints: (builder)=>({
+  endpoints: (builder) => ({
     getAllUsers: builder.query({
-        query: ()=> '/totalUsers'
+      query: () => "/totalUsers",
     }),
     getAllCars: builder.query({
-      query: ()=> '/totalCars'
+      query: () => "/totalCars",
     }),
     getAllActiveLeases: builder.query({
-      query: ()=> '/activeLeases'
+      query: () => "/activeLeases",
     }),
     getAllActivity: builder.query({
-      query:()=> '/recent-activity'
+      query: () => "/recent-activity",
     }),
     getOneWeekCars: builder.query({
-      query: ()=> '/recent-cars'
-    })
+      query: () => "/recent-cars",
+    }),
+    getNewAllUsers: builder.query({
+      query: () => "/new-users",
+    }),
+    getAllActiveUsers: builder.query({
+      query: () => "/active/users",
+    }),
+    getAllUserss: builder.query({
+      query: () => "/all/users",
+    }),
+    deleteUser: builder.mutation({
+      query: (id) => ({
+        url: `/delete/user/${id}`,
+        method: "DELETE",
+      }),
+    }),
+    getUserDetails: builder.query({
+      query: (id) => `/user/details/${id}`,
+    }),
+  }),
+});
 
-
-
-  })
-
-})
-
-export const {useGetAllUsersQuery, useGetAllCarsQuery, useGetAllActiveLeasesQuery, useGetAllActivityQuery, useGetOneWeekCarsQuery} = apiSlice;
+export const {
+  useGetAllUsersQuery,
+  useGetAllCarsQuery,
+  useGetAllActiveLeasesQuery,
+  useGetAllActivityQuery,
+  useGetOneWeekCarsQuery,
+  useGetNewAllUsersQuery,
+  useGetAllUserssQuery,
+  useGetAllActiveUsersQuery,
+  useDeleteUserMutation,
+  useGetUserDetailsQuery
+} = apiSlice;

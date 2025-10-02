@@ -1,6 +1,7 @@
 import { Bell, Trash2, UserCheck2, Users, UsersRoundIcon, ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import Nav from "./Nav";
+import { useGetAllUserssQuery } from "@/redux-toolkit-store/slices/rtk/apiSlices";
 
 type Lease = {
   id: string;
@@ -104,8 +105,12 @@ export default function User() {
   const [showActive, setShowActive] = useState(true);
   const [showCompleted, setShowCompleted] = useState(false);
 
+  const {data: Userss, error} = useGetAllUserssQuery(undefined);
+
+  console.log(error);
+  
+
   const user = sampleUsers[0]; 
-  console.log(user);
   
   const activeLeases = user.leases.filter((l) => l.status === "active");
   const completedLeases = user.leases.filter((l) => l.status === "completed");
