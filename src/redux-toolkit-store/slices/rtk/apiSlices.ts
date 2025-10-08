@@ -49,6 +49,43 @@ export const apiSlice = createApi({
     getUserDetails: builder.query({
       query: (id) => `/user/details/${id}`,
     }),
+    totalCarss: builder.query({
+      query:()=> '/total-cars-for-car-management'
+    }),
+    getCarDetails: builder.query({
+      query:(id)=> `/car-details/${id}`
+    }),
+    deleteCarListing: builder.mutation({
+      query:(id)=>({
+        url:`/delete/car-listing/${id}`,
+        method:'DELETE',
+      })
+    }),
+    addNewCar: builder.mutation({
+      query:(body)=>({
+        url:"/car-listing",
+        method:"POST",
+        body
+      })
+    }),
+    setFaqs: builder.mutation({
+      query:(body)=>({
+        url: '/set-faqs',
+        method:'POST',
+        body
+      })
+    }),
+    setPolicy: builder.mutation({
+      query:(body)=>({
+        url:'/set-policy',
+        method:'POST',
+        body
+      })
+    })
+
+
+
+
   }),
 });
 
@@ -62,5 +99,11 @@ export const {
   useGetAllUserssQuery,
   useGetAllActiveUsersQuery,
   useDeleteUserMutation,
-  useGetUserDetailsQuery
+  useLazyGetUserDetailsQuery,
+  useTotalCarssQuery,
+  useLazyGetCarDetailsQuery,
+  useDeleteCarListingMutation,
+  useAddNewCarMutation,
+  useSetFaqsMutation,
+  useSetPolicyMutation
 } = apiSlice;

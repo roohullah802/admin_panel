@@ -1,7 +1,34 @@
-import { Bell, Trash2, UserCheck2, Users, UsersRoundIcon, ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import {
+  Bell,
+  Trash2,
+  UserCheck2,
+  Users,
+  UsersRoundIcon,
+  ChevronDown,
+  ChevronRight,
+  Menu,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Nav from "./Nav";
-import { useGetAllUserssQuery } from "@/redux-toolkit-store/slices/rtk/apiSlices";
+import {
+  useDeleteUserMutation,
+  useGetAllActiveUsersQuery,
+  useGetAllUsersQuery,
+  useGetAllUserssQuery,
+  useGetNewAllUsersQuery,
+  useLazyGetUserDetailsQuery,
+} from "@/redux-toolkit-store/slices/rtk/apiSlices";
+import ClipLoader from "react-spinners/ClipLoader";
+import { formatDate } from "@/lib/formatDate";
+import { toast } from "react-toastify";
+import { io } from "socket.io-client";
+
+const socket = io("https://api.citycarcenters.com", {
+  transports: ["websocket", "polling"],
+  withCredentials: true,
+});
 
 type Lease = {
   id: string;
@@ -24,56 +51,6 @@ type User = {
   leases: Lease[];
 };
 
-const sampleUsers: User[] = [
-  {
-    id: "u1",
-    name: "Maren Curtis",
-    email: "john.doe@gmail.com",
-    phone: "+1 231 222 9012",
-    memberSince: "Jun 2023",
-    totalLeases: 3,
-    avatar: "/avatar-1.jpg",
-    leases: [
-      {
-        id: "l1",
-        car: "Tesla Model 3",
-        start: "15/01/2024",
-        end: "15/01/2025",
-        monthly: "$599",
-        totalPaid: "$7,188",
-        status: "active",
-      },
-      {
-        id: "l1",
-        car: "Tesla Model 3",
-        start: "15/01/2024",
-        end: "15/01/2025",
-        monthly: "$599",
-        totalPaid: "$7,188",
-        status: "active",
-      },
-      {
-        id: "l2",
-        car: "BMW i4",
-        start: "01/02/2023",
-        end: "01/02/2024",
-        monthly: "$550",
-        totalPaid: "$6,600",
-        status: "completed",
-      },
-      {
-        id: "l2",
-        car: "BMW i4",
-        start: "01/02/2023",
-        end: "01/02/2024",
-        monthly: "$550",
-        totalPaid: "$6,600",
-        status: "completed",
-      },
-    ],
-  },
-];
-
 function IconCard({
   title,
   value,
@@ -82,7 +59,7 @@ function IconCard({
   col,
 }: {
   title: string;
-  value: string;
+  value: string | number;
   sub?: string;
   Icon?: LucideIcon;
   col: string;
@@ -90,9 +67,13 @@ function IconCard({
   return (
     <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex justify-center items-center gap-2">
-        <div>{Icon && <Icon className={`${col} text-white rounded-3xl p-2 size-10`} />}</div>
         <div>
-          <div className={`text-sm text-black`}>{title}</div>
+          {Icon && (
+            <Icon className={`${col} text-white rounded-3xl p-2 size-10`} />
+          )}
+        </div>
+        <div>
+          <div className="text-sm text-black">{title}</div>
           <div className="text-2xl font-semibold">{value}</div>
           {sub && <div className="text-xs text-green-600">{sub}</div>}
         </div>
@@ -104,32 +85,137 @@ function IconCard({
 export default function User() {
   const [showActive, setShowActive] = useState(true);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState<string>("");
 
-  const {data: Userss, error} = useGetAllUserssQuery(undefined);
+  const { data: Userss, isLoading: isLoadingUserss } =
+    useGetAllUserssQuery(undefined);
+  const { data: TotalUsers } = useGetAllUsersQuery(undefined);
+  const { data: NewUsers, isLoading: isLoadingNewUsers } =
+    useGetNewAllUsersQuery(undefined);
+  const { data: ActiveUsers, isLoading: isLoadingActiveUsers } =
+    useGetAllActiveUsersQuery(undefined);
+  const [deleteUser, { isLoading: isLoadingDelete }] = useDeleteUserMutation();
+  const [
+    triggerGetUserDetails,
+    { data: UserDetails, isLoading: isLoadingUserDetails },
+  ] = useLazyGetUserDetailsQuery();
 
-  console.log(error);
+  console.log(UserDetails);
   
 
-  const user = sampleUsers[0]; 
-  
-  const activeLeases = user.leases.filter((l) => l.status === "active");
-  const completedLeases = user.leases.filter((l) => l.status === "completed");
+  useEffect(() => {
+    setAllUsers(Userss?.users || []);
+  }, [Userss]);
 
+  const filteredUserss = useMemo(() => {
+    return allUsers.filter((u) =>
+      u.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [allUsers, search]);
+
+  useEffect(() => {
+    socket.on("userDeleted", (id) => {
+      setAllUsers((prev) => prev?.filter((u: any) => u?._id !== id?.id));
+    });
+
+    socket.on("userAdded", (user) => {
+      setAllUsers((prev) => [user, ...prev]);
+    });
+
+    return () => {
+      socket.off("userDeleted");
+      socket.off("userAdded");
+    };
+  }, []);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteUser(id).unwrap();
+        toast.success("User deleted successfully", {
+          position: "top-center",
+        });
+      } catch (error: any) {
+        toast.error(error?.message || "Error deleting user", {
+          position: "top-center",
+        });
+      }
+    },
+    [deleteUser]
+  );
+
+  const handleClick = useCallback(
+    (id: string) => {
+      setSelectedUserId(id);
+      triggerGetUserDetails(id);
+    },
+    [triggerGetUserDetails]
+  );
+
+  console.log(UserDetails);
+  
   return (
-    <div className="max-w-[1400px] h-screen overflow-hidden bg-gray-200 flex flex-row">
-      <Nav />
-      <div className="flex flex-row overflow-scroll w-full" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        {/* Main content */}
+    <div className="relative bg-gray-200 flex flex-col sm:flex-row min-h-screen overflow-hidden">
+      {/* Sidebar */}
+      <div
+        className={`fixed sm:static top-0 left-0 h-full sm:h-auto bg-gray-200 z-40 transform transition-transform duration-300 ${
+          menuOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
+        }`}
+      >
+        {/* Close button for mobile */}
+        <div className="sm:hidden flex justify-end p-4">
+          <button onClick={() => setMenuOpen(false)}>
+            <X size={28} className="text-gray-800" />
+          </button>
+        </div>
+        <Nav />
+      </div>
+
+      {/* Overlay for mobile */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 sm:hidden z-30"
+          onClick={() => setMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* Main Content */}
+      <div
+        className="flex flex-col sm:flex-row w-full overflow-scroll"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
         <main className="w-full bg-white p-4 flex flex-col">
-          {/* header */}
-          <div className="flex items-center justify-between mb-6 shrink-0">
-            <div>
-              <h2 className="text-2xl font-bold">User management</h2>
-              <div className="text-sm text-slate-800 mt-1">Manage users, leases, payments and activity</div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Hamburger for mobile */}
+              <button
+                className="sm:hidden text-gray-800"
+                onClick={() => setMenuOpen(true)}
+              >
+                <Menu size={28} />
+              </button>
+
+              <div>
+                <h2 className="text-2xl font-bold">User management</h2>
+                <div className="text-sm text-slate-800 mt-1">
+                  Manage users, leases, payments and activity
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input type="text" placeholder="Search..." className="border rounded-lg px-3 py-1 w-full sm:w-60" />
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="border rounded-lg px-3 py-1 w-full sm:w-60 md:w-72"
+                />
               </div>
               <button className="p-2 rounded-full hover:bg-slate-100">
                 <Bell className="w-5 h-5" />
@@ -137,147 +223,281 @@ export default function User() {
             </div>
           </div>
 
-          {/* top cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 shrink-0">
-            <IconCard title="Total Users" value="2412K" sub="+8% than last month" Icon={Users} col={"bg-[#51AFF3]"} />
-            <IconCard title="New Users" value="100" sub="+5% from yesterday" Icon={UsersRoundIcon} col={"bg-[#019CD0]"} />
-            <IconCard title="Active Users" value="901" sub="+2% from yesterday" Icon={UserCheck2} col={"bg-green-800"} />
+          {/* Top Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <IconCard
+              title="Total Users"
+              value={
+                isLoadingUserss ? (
+                  <ClipLoader
+                    loading={isLoadingUserss}
+                    size={18}
+                    color="black"
+                  />
+                ) : (
+                  TotalUsers?.users || 0
+                )
+              }
+              sub="+8% than last month"
+              Icon={Users}
+              col={"bg-[#51AFF3]"}
+            />
+            <IconCard
+              title="New Users"
+              value={
+                isLoadingNewUsers ? (
+                  <ClipLoader
+                    loading={isLoadingUserss}
+                    size={18}
+                    color="black"
+                  />
+                ) : (
+                  NewUsers?.users?.length || 0
+                )
+              }
+              sub="+5% from yesterday"
+              Icon={UsersRoundIcon}
+              col={"bg-[#019CD0]"}
+            />
+            <IconCard
+              title="Active Users"
+              value={
+                isLoadingActiveUsers ? (
+                  <ClipLoader
+                    loading={isLoadingUserss}
+                    size={18}
+                    color="black"
+                  />
+                ) : (
+                  ActiveUsers?.users?.length || 0
+                )
+              }
+              sub="+2% from yesterday"
+              Icon={UserCheck2}
+              col={"bg-green-800"}
+            />
           </div>
 
-          {/* table card */}
+          {/* Table */}
           <div
-            className="h-full overflow-scroll dark:bg-slate-800  rounded-2xl p-4 shadow-sm border border-slate-100"
+            className="overflow-x-auto overflow-y-auto h-[300px] dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <table className="w-full text-left table-auto">
-              <thead className=" bg-gray-200 dark:bg-slate-800">
-                <tr className="text-sm text-slate-800">
-                  <th className="py-3 text-slate-800">User</th>
-                  <th className="py-3 text-slate-800">Contact</th>
-                  <th className="py-3 text-slate-800">Total lease</th>
-                  <th className="py-3 text-slate-800">Actions</th>
+            <table className="w-full text-left table-auto text-sm">
+              <thead className="bg-gray-200 dark:bg-slate-800">
+                <tr className="text-slate-800">
+                  <th className="py-3 px-2">User</th>
+                  <th className="py-3 px-2">Contact</th>
+                  <th className="py-3 px-2 text-center">Total lease</th>
+                  <th className="py-3 px-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {sampleUsers.map((u) => (
-                  <tr key={u.id} className="border-t border-slate-100">
-                    <td className="py-4">
-                      <div className="flex items-center gap-3">
-                        <img src={u.avatar || "/avatar-placeholder.png"} alt={u.name} className="w-10 h-10 rounded-full object-cover" />
-                        <div>
-                          <div className="font-medium">{u.name}</div>
-                          <div className="text-xs text-slate-800">Member since {u.memberSince}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 text-sm text-slate-500">
-                      <div className="text-slate-800">{u.email}</div>
-                    </td>
-                    <td className="py-4 text-slate-800">
-                      {u.totalLeases} lease{u.totalLeases > 1 ? "s" : ""}
-                    </td>
-                    <td className="py-4">
-                      <div className="flex gap-2 items-center">
-                        <button title="Edit" className="p-2 rounded-md hover:bg-slate-100"></button>
-                        <button title="Delete" className="p-2 rounded-md hover:bg-slate-100 text-red-500">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                {isLoadingUserss ? (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center">
+                      <ClipLoader loading={true} color="black" size={40} />
                     </td>
                   </tr>
-                ))}
+                ) : !allUsers || allUsers?.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center">
+                      <span className="text-red-600 font-medium">No Users</span>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUserss?.map((u: any) => (
+                    <tr
+                      key={u._id}
+                      onClick={() => handleClick(u?._id)}
+                      className="border-t border-slate-100 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <td className="py-4 px-2">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <img
+                            src={u?.profile}
+                            alt={u?.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div className="flex flex-col overflow-hidden">
+                            <div className="font-medium truncate max-w-[100px] sm:max-w-[140px]">
+                              {u?.name}
+                            </div>
+                            <div className="text-xs text-slate-800 truncate max-w-[120px] sm:max-w-[160px]">
+                              Member since{" "}
+                              {u?.createdAt ? formatDate(u.createdAt) : "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-2 text-slate-800 truncate max-w-[100px] sm:max-w-[160px]">
+                        {u?.email}
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        {u?.totalLeases ?? 0}
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        <button
+                          title="Delete"
+                          className="p-2 rounded-md hover:bg-slate-100 text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(u._id);
+                          }}
+                        >
+                          {isLoadingDelete ? (
+                            <ClipLoader
+                              loading={isLoadingDelete}
+                              size={18}
+                              color="black"
+                            />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </main>
 
         {/* Right panel */}
-        <aside className=" bg-white  overflow-scroll p-4 " style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-          <div className="sticky top-4 space-y-4 w-full">
-            {/* Profile summary */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100">
-              <div className="flex items-center gap-4 overflow-hidden">
-                <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-full object-cover" />
-                <div>
-                  <div className="font-semibold">{user.name}</div>
-                  <div className="text-xs text-slate-800">{user.email}</div>
-                  <div className="text-xs text-slate-800">Member since {user.memberSince}</div>
+        <aside className="bg-white w-full sm:w-[350px] md:w-[400px] p-4 overflow-y-auto mt-4 sm:mt-0">
+          {isLoadingUserDetails && (
+            <div className="flex justify-center items-center h-full">
+              <ClipLoader loading={true} size={40} color="black" />
+            </div>
+          )}
+          {!selectedUserId && !isLoadingUserDetails && (
+            <div className="flex justify-center items-center h-full text-gray-500 text-sm">
+              No user selected
+            </div>
+          )}
+          {selectedUserId &&
+            !isLoadingUserDetails &&
+            UserDetails?.userDetailss && (
+              <div className="space-y-4 w-full">
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={UserDetails?.userDetailss?.profile}
+                      alt={UserDetails?.userDetailss?.name}
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
+                    <div className="overflow-hidden">
+                      <div className="font-semibold truncate max-w-[120px] sm:max-w-[180px]">
+                        {UserDetails?.userDetailss?.name}
+                      </div>
+                      <div className="text-xs text-slate-800 truncate max-w-[120px] sm:max-w-[180px]">
+                        {UserDetails?.userDetailss?.email}
+                      </div>
+                      <div className="text-xs text-slate-800">
+                        Member since{" "}
+                        {formatDate(UserDetails?.userDetailss?.createdAt)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-2 w-full">
+                    <div className="p-2 bg-blue-50 rounded-lg flex-1 flex flex-col items-center">
+                      <div className="text-sm text-slate-800">
+                        {UserDetails?.LeasesLength || 0}
+                      </div>
+                      <div className="text-xs text-blue-800">Total Lease</div>
+                    </div>
+                    <div className="p-2 bg-green-50 rounded-lg flex-1 flex flex-col items-center">
+                      <div className="text-sm text-slate-800">
+                        {UserDetails?.totalPaid || 0}
+                      </div>
+                      <div className="text-xs text-green-600">Total Paid</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active leases */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                  <button
+                    onClick={() => setShowActive(!showActive)}
+                    className="flex justify-between items-center w-full text-sm text-black mb-2"
+                  >
+                    Active leases ({UserDetails?.activeLeases?.length})
+                    {showActive ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </button>
+                  {showActive && (
+                    <div className="space-y-3">
+                      {UserDetails?.activeLeases?.map((lease) => {
+                        console.log(lease.car.modelName);
+                        
+                        return(
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="text-sm font-medium flex items-center">
+                            <span>{lease?.car?.modelName.charAt(0).toUpperCase() + lease?.car?.modelName.slice(1)}</span>
+                            <span className="text-xs inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                              {lease?.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-800 mt-2">
+                            Start date: {formatDate(lease?.startDate)}
+                          </div>
+                          <div className="text-xs text-slate-800">
+                            End date: {formatDate(lease?.endDate)}
+                          </div>
+                          <div className="text-sm">
+                            Total paid: <strong>${lease?.totalAmount}</strong>
+                          </div>
+                        </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Completed leases */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                  <button
+                    onClick={() => setShowCompleted(!showCompleted)}
+                    className="flex justify-between items-center w-full text-sm text-black mb-2"
+                  >
+                    Completed leases ({UserDetails?.completedLeases?.length})
+                    {showCompleted ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </button>
+                  {showCompleted && (
+                    <div className="space-y-3">
+                      {UserDetails?.completedLeases?.map((lease) => (
+                        <div className="p-3 bg-emerald-50 rounded-lg">
+                          <div className="text-sm font-medium">
+                            {lease?.car?.modelName.charAt(0).toUpperCase() + lease?.car?.modelName.slice(1)}{" "}
+                            <span className="text-xs inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                              {lease?.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-800 mt-2">
+                            Start date: {formatDate(lease?.startDate)}
+                          </div>
+                          <div className="text-xs text-slate-800">
+                            End date: {formatDate(lease?.endDate)}
+                          </div>
+                          <div className="text-sm">
+                            Total paid: <strong>${lease?.totalAmount}</strong>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className="flex gap-2 mt-2 w-[300px] overflow-hidden">
-                <div className="p-2 bg-blue-50 rounded-lg flex justify-center flex-col items-center">
-                  <div className="text-[12px] text-slate-800">{user.totalLeases}</div>
-                  <div className="text-[10px] text-blue-800">Total Lease</div>
-                </div>
-                <div className="p-2 bg-green-50 rounded-lg flex justify-center flex-col items-center">
-                  <div className="text-sm text-slate-800">$44</div>
-                  <div className="text-xs text-green-600">Total Paid</div>
-                </div>
-                <div className="p-2 bg-red-50 rounded-lg flex justify-center flex-col items-center">
-                  <div className="text-sm text-slate-800">0</div>
-                  <div className="text-xs text-red-800">Unpaid</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Active Leases dropdown */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100">
-              <button
-                onClick={() => setShowActive(!showActive)}
-                className="flex justify-between items-center w-full text-sm text-black mb-2"
-              >
-                Active leases ({activeLeases.length})
-                {showActive ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </button>
-              {showActive && (
-                <div className="space-y-3">
-                  {activeLeases.map((lease) => (
-                    <div key={lease.id} className="p-3 bg-blue-50 rounded-lg">
-                      <div className="text-sm font-medium flex">
-                        <span>{lease.car}</span>
-                        <span className="text-xs inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-blue-600 text-white">Active</span>
-                      </div>
-                      <div className="text-xs text-slate-800 mt-2">Start date: {lease.start}</div>
-                      <div className="text-xs text-slate-800">End date: {lease.end}</div>
-                      <div className="text-sm">Total paid: <strong>{lease.totalPaid}</strong></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Completed Leases dropdown */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100">
-              <button
-                onClick={() => setShowCompleted(!showCompleted)}
-                className="flex justify-between items-center w-full text-sm text-black mb-2"
-              >
-                Completed leases ({completedLeases.length})
-                {showCompleted ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </button>
-              {showCompleted && (
-                <div className="space-y-3">
-                  {completedLeases.map((lease) => (
-                    <div key={lease.id} className="p-3 bg-emerald-50 rounded-lg">
-                      <div className="text-sm font-medium">
-                        {lease.car}{" "}
-                        <span className="text-xs inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-                          Completed
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-800 mt-2">Start date: {lease.start}</div>
-                      <div className="text-xs text-slate-800">End date: {lease.end}</div>
-                      {lease.monthly && (
-                        <div className="text-sm mt-3">Monthly payment: <strong>{lease.monthly}</strong></div>
-                      )}
-                      <div className="text-sm">Total paid: <strong>{lease.totalPaid}</strong></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+            )}
         </aside>
       </div>
     </div>

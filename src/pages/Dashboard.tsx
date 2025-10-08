@@ -3,7 +3,9 @@ import {
   Car,
   Activity,
   User,
-  RefreshCcw
+  RefreshCcw,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -14,8 +16,8 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import {  useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/redux-toolkit-store/store/store";
 import { useEffect, useMemo, useState } from "react";
 import { greetWithTime } from "@/lib/greetings";
@@ -29,6 +31,7 @@ import {
 import ClipLoader from "react-spinners/ClipLoader";
 import { formatDate } from "@/lib/formatDate";
 import Nav from "./Nav";
+import { clearUserData } from "@/redux-toolkit-store/slices/userSlice/userSlice";
 
 interface ActivityTypes {
   action: string;
@@ -57,38 +60,39 @@ const chartData = [
 ];
 
 export default function Dashboard() {
-
-  const [search, setSearch] = useState<string>('');
-
-
+  const [search, setSearch] = useState<string>("");
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
   const { isLoggedIn, userData } = useSelector(
     (state: RootState) => state.user
   );
   const navigate = useNavigate();
-  const { data: Users, isLoading: isLoadingUsers } =
-    useGetAllUsersQuery(undefined);
-  const { data: Cars, isLoading: isLoadingCars } =
-    useGetAllCarsQuery(undefined);
-  const { data: ActiveLeases, isLoading: isLoadingLeases } =
-    useGetAllActiveLeasesQuery(undefined);
+  const { data: Users, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
+  const { data: Cars, isLoading: isLoadingCars } = useGetAllCarsQuery(undefined);
+  const { data: ActiveLeases, isLoading: isLoadingLeases } = useGetAllActiveLeasesQuery(undefined);
   const {
     data: UserActivity,
     isLoading: isLoadingActivity,
     error,
   } = useGetAllActivityQuery(undefined);
-  const { data: OneWeekCars, isLoading: isLoadingOnwWeekCars, error: errorOneWeekCars } = useGetOneWeekCarsQuery(undefined);
+  const { data: OneWeekCars, isLoading: isLoadingOneWeekCars, error: errorOneWeekCars } =
+    useGetOneWeekCarsQuery(undefined);
+
+
   const users = Users?.users;
   const cars = Cars?.cars;
   const leases = ActiveLeases?.leases;
   const activity = UserActivity?.activities;
   const oneweekcars = OneWeekCars?.cars;
-  console.log(activity);
+
+  console.log(OneWeekCars);
   
 
-  const filteredCars = useMemo(()=>{
-   return oneweekcars?.filter((itm:CarTypes)=> itm.modelName.includes(search))
-  },[oneweekcars, search])
+  const filteredCars = useMemo(() => {
+    return oneweekcars?.filter((itm: CarTypes) =>
+      itm.modelName.includes(search)
+    );
+  }, [oneweekcars, search]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -97,7 +101,7 @@ export default function Dashboard() {
   }, [isLoggedIn, navigate]);
 
   const stats = [
-    { 
+    {
       title: "Total Users",
       value: isLoadingUsers ? (
         <div className="flex justify-center w-full">
@@ -119,7 +123,7 @@ export default function Dashboard() {
         cars || 0
       ),
       change: "+5% from yesterday",
-      icon: <Car className="bg-[#326FF4] p-2 rounded-3xl size-10 text-white"  />,
+      icon: <Car className="bg-[#326FF4] p-2 rounded-3xl size-10 text-white" />,
     },
     {
       title: "Active Leases",
@@ -131,17 +135,49 @@ export default function Dashboard() {
         leases?.length || 0
       ),
       change: "+2% from yesterday",
-      icon: <Activity className="bg-[#FF9211] p-2 rounded-3xl size-10 text-white" />,
+      icon: (
+        <Activity className="bg-[#FF9211] p-2 rounded-3xl size-10 text-white" />
+      ),
     },
   ];
 
   return (
-    <div className="flex  flex-col md:flex-row h-screen bg-gray-200">
-      {/* Sidebar */}
-      <Nav />
+    <div className="flex flex-col md:flex-row h-screen bg-gray-200">
+      {/* Sidebar for large screen */}
+      <div className="hidden md:block">
+        <Nav />
+      </div>
+
+      {/* Hamburger Button (mobile + tablet) */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="p-2 rounded-md bg-white shadow-md"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Mobile Sidebar */}
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-40 z-40" onClick={() => setMenuOpen(false)}></div>
+          <div className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-50 transform transition-transform duration-300">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h1 className="font-bold text-lg">Menu</h1>
+              <button onClick={() => setMenuOpen(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <Nav />
+          </div>
+        </>
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-white  flex flex-col overflow-scroll"
-      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      <main
+        className="flex-1 p-6 bg-white flex flex-col overflow-scroll"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
@@ -152,7 +188,7 @@ export default function Dashboard() {
             type="text"
             placeholder="Search..."
             value={search}
-            onChange={(txt)=> setSearch(txt.target.value)}
+            onChange={(txt) => setSearch(txt.target.value)}
             className="border rounded-lg px-3 py-1 w-full sm:w-60"
           />
         </header>
@@ -162,7 +198,7 @@ export default function Dashboard() {
           {stats.map((s, i) => (
             <Card key={i} className="rounded-2xl">
               <CardContent className="flex items-center justify-around p-2">
-                  {s.icon}
+                {s.icon}
                 <div>
                   <p className="text-sm text-muted-foreground">{s.title}</p>
                   <h3 className="text-2xl font-bold">{s.value}</h3>
@@ -174,7 +210,6 @@ export default function Dashboard() {
         </div>
 
         {/* Lease Analytics */}
-        {/* Lease Analytics */}
         <div className="bg-white rounded-2xl shadow-md p-4 mb-4 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-2">Lease Analytics</h2>
           <div className="w-full h-[200px]">
@@ -184,18 +219,8 @@ export default function Dashboard() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="total"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="today"
-                  stroke="#f97316"
-                  strokeWidth={2}
-                />
+                <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
+                <Line type="monotone" dataKey="today" stroke="#f97316" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -205,43 +230,56 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-md p-4 mb-6 flex-shrink-0 overflow-auto">
           <h2 className="text-lg font-semibold mb-4">Recently Added Cars</h2>
           <div className="space-y-3">
-            {errorOneWeekCars && <div><h1 className="text-red-500">something went wrong!</h1></div>}
-            {isLoadingOnwWeekCars ? (<ClipLoader loading={isLoadingOnwWeekCars} size={20} color="black" />) : (
-              filteredCars?.map((item: CarTypes) => (
-              <div key={item._id} className="flex justify-between items-center border p-3 rounded-lg">
-                <div className="flex gap-2">
-                  <div className="p-[5px] rounded-2xl overflow-hidden">
-                    <img
-                      className="w-18 h-10 rounded-[5px]"
-                      src={item?.images[0]}
-                      alt="Mercedes"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">
-                      {item?.modelName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(item.createdAt)}
-                    </p>
-                  </div>
-                </div>
-                <div className={`px-4 py-0.2 ${item.available === true ? "bg-blue-100 text-blue-700 border border-blue-700": "bg-red-100 text-red-700 border border-red-700"} rounded-2xl`}>
-                {item.available === true ? 'available':'Leased'}
-                </div>
+            {errorOneWeekCars && (
+              <div>
+                <h1 className="text-red-500">Something went wrong!</h1>
               </div>
-            ))
+            )}
+            {isLoadingOneWeekCars ? (
+              <ClipLoader loading={isLoadingOneWeekCars} size={20} color="black" />
+            ) : (
+              filteredCars?.map((item: CarTypes) => (
+                <div
+                  key={item._id}
+                  className="flex justify-between items-center border p-3 rounded-lg"
+                >
+                  <div className="flex gap-2">
+                    <div className="p-[5px] rounded-2xl overflow-hidden">
+                      <img
+                        className="w-18 h-10 rounded-[5px]"
+                        src={item?.images[0]}
+                        alt="Mercedes"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{item?.modelName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(item.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`px-4 py-0.2 ${
+                      item.available
+                        ? "bg-blue-100 text-blue-700 border border-blue-700"
+                        : "bg-red-100 text-red-700 border border-red-700"
+                    } rounded-2xl`}
+                  >
+                    {item.available ? "Available" : "Leased"}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
       </main>
 
       {/* Recent Activity */}
-      <aside className="hidden lg:block w-60 bg-white shadow-lg p-4  flex-shrink-0">
+      <aside className="hidden lg:block w-60 bg-white shadow-lg p-4 flex-shrink-0">
         <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
         {error && (
           <div className="w-full">
-            <h1 className="text-red-500">something went wrong!</h1>
+            <h1 className="text-red-500">Something went wrong!</h1>
           </div>
         )}
         {isLoadingActivity ? (
@@ -255,11 +293,19 @@ export default function Dashboard() {
               className="w-full h-16 flex justify-center items-center gap-2 mb-4 p-1"
             >
               <div className="h-full">
-                <div className={`p-1.5 ${item.action === 'Lease Created' ? "bg-blue-100" : "bg-[#FFF8EC]"} rounded-full`}>
-                  {item.action === 'Lease Extended' ? <RefreshCcw className="text-[#FFDB3D]" size={18} /> :  <Car className="text-blue-900" size={18} />}
-               
-                
-              </div>
+                <div
+                  className={`p-1.5 ${
+                    item.action === "Lease Created"
+                      ? "bg-blue-100"
+                      : "bg-[#FFF8EC]"
+                  } rounded-full`}
+                >
+                  {item.action === "Lease Extended" ? (
+                    <RefreshCcw className="text-[#FFDB3D]" size={18} />
+                  ) : (
+                    <Car className="text-blue-900" size={18} />
+                  )}
+                </div>
               </div>
               <div>
                 <h1 className="font-semibold text-[15px]">{item.action}</h1>
