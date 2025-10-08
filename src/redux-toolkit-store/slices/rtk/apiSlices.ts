@@ -16,6 +16,7 @@ export const apiSlice = createApi({
     },
   }),
   endpoints: (builder) => ({
+
     getAllUsers: builder.query({
       query: () => "/totalUsers",
     }),
@@ -31,6 +32,8 @@ export const apiSlice = createApi({
     getOneWeekCars: builder.query({
       query: () => "/recent-cars",
     }),
+
+  
     getNewAllUsers: builder.query({
       query: () => "/new-users",
     }),
@@ -40,54 +43,66 @@ export const apiSlice = createApi({
     getAllUserss: builder.query({
       query: () => "/all/users",
     }),
+    getUserDetails: builder.query({
+      query: (id) => `/user/details/${id}`,
+    }),
     deleteUser: builder.mutation({
       query: (id) => ({
         url: `/delete/user/${id}`,
         method: "DELETE",
       }),
     }),
-    getUserDetails: builder.query({
-      query: (id) => `/user/details/${id}`,
-    }),
+
+  
     totalCarss: builder.query({
-      query:()=> '/total-cars-for-car-management'
+      query: () => "/total-cars-for-car-management",
     }),
     getCarDetails: builder.query({
-      query:(id)=> `/car-details/${id}`
+      query: (id) => `/car-details/${id}`,
     }),
     deleteCarListing: builder.mutation({
-      query:(id)=>({
-        url:`/delete/car-listing/${id}`,
-        method:'DELETE',
-      })
+      query: (id) => ({
+        url: `/delete/car-listing/${id}`,
+        method: "DELETE",
+      }),
     }),
     addNewCar: builder.mutation({
-      query:(body)=>({
-        url:"/car-listing",
-        method:"POST",
-        body
-      })
+      query: (body) => ({
+        url: "/car-listing",
+        method: "POST",
+        body,
+      }),
     }),
+
+   
     setFaqs: builder.mutation({
-      query:(body)=>({
-        url: '/set-faqs',
-        method:'POST',
-        body
-      })
+      query: (body) => ({
+        url: "/set-faqs",
+        method: "POST",
+        body,
+      }),
     }),
     setPolicy: builder.mutation({
-      query:(body)=>({
-        url:'/set-policy',
-        method:'POST',
-        body
-      })
-    })
+      query: (body) => ({
+        url: "/set-policy",
+        method: "POST",
+        body,
+      }),
+    }),
 
-
-
-
+ 
+    getOneWeekUsers: builder.query({
+      query: () => "/new-users",
+    }),
+    getActiveUsers: builder.query({
+      query: () => "/active/users",
+    }),
+    getTotalUsers: builder.query({
+      query: () => "/all/users",
+    }),
   }),
 });
+
 
 export const {
   useGetAllUsersQuery,
@@ -101,9 +116,12 @@ export const {
   useDeleteUserMutation,
   useLazyGetUserDetailsQuery,
   useTotalCarssQuery,
-  useLazyGetCarDetailsQuery,
+  useGetCarDetailsQuery,
   useDeleteCarListingMutation,
   useAddNewCarMutation,
   useSetFaqsMutation,
-  useSetPolicyMutation
+  useSetPolicyMutation,
+  useGetOneWeekUsersQuery,
+  useGetActiveUsersQuery,
+  useGetTotalUsersQuery,
 } = apiSlice;
