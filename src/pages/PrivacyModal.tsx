@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  X,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  ShieldCheck,
-} from "lucide-react";
+import { X, ChevronDown, ChevronUp, Loader2, ShieldCheck } from "lucide-react";
 import { useSetPolicyMutation } from "@/redux-toolkit-store/slices/rtk/apiSlices";
 import { toast } from "react-toastify";
 
@@ -63,12 +57,15 @@ const PrivacyModal: React.FC<PrivModalProps> = ({
 
       setPrivacy((prev) => [...prev, { id: prev.length + 1, ...payload }]);
       setFormData({ title: "", description: "" });
-    } catch (error: any) {
-      const message =
-        error?.data?.message ||
-        error?.error ||
-        "Something went wrong while adding policy.";
-      toast.error(message);
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "data" in error) {
+        const err = error as { data?: { message?: string } };
+        toast(err.data?.message || "Something went wrong while adding policy.");
+      } else if (error instanceof Error) {
+        toast(error.message);
+      } else {
+        toast("Unexpected error");
+      }
     }
   };
 

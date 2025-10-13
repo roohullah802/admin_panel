@@ -15,7 +15,11 @@ interface FaqModalProps {
   isAdmin?: boolean;
 }
 
-const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) => {
+const FaqModal: React.FC<FaqModalProps> = ({
+  open,
+  onClose,
+  isAdmin = false,
+}) => {
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [formData, setFormData] = useState({ question: "", answer: "" });
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -52,17 +56,23 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
 
       setFaqs((prev) => [
         ...prev,
-        { id: prev.length + 1, question: payload.question, answer: payload.answer },
+        {
+          id: prev.length + 1,
+          question: payload.question,
+          answer: payload.answer,
+        },
       ]);
 
       setFormData({ question: "", answer: "" });
-    } catch (error: any) {
-      console.error("Add FAQ Error:", error);
-      const message =
-        error?.data?.message ||
-        error?.error ||
-        "Something went wrong while adding FAQ.";
-      toast.error(message);
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "data" in error) {
+        const err = error as { data?: { message?: string } };
+        toast(err.data?.message || "Something went wrong while adding FAQ.");
+      } else if (error instanceof Error) {
+        toast(error.message);
+      } else {
+        toast("Unexpected error");
+      }
     }
   };
 
@@ -84,8 +94,12 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
           <div className="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mb-3">
             <FileText size={28} className="text-blue-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-800">Frequently Asked Questions</h2>
-          <p className="text-gray-500 text-sm mb-4">Manage or view FAQs easily.</p>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-gray-500 text-sm mb-4">
+            Manage or view FAQs easily.
+          </p>
         </div>
 
         {/* Scrollable Body */}

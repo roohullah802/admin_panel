@@ -54,7 +54,9 @@ function IconCard({
         <div>
           <div className="text-sm md:text-base text-black">{title}</div>
           <div className="text-xl md:text-2xl font-semibold">{value}</div>
-          {sub && <div className="text-xs md:text-sm text-green-600">{sub}</div>}
+          {sub && (
+            <div className="text-xs md:text-sm text-green-600">{sub}</div>
+          )}
         </div>
       </div>
     </div>
@@ -69,22 +71,28 @@ export default function User() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState<string>("");
 
-  const { data: Userss, isLoading: isLoadingUserss } = useGetAllUserssQuery(undefined);
+  const { data: Userss, isLoading: isLoadingUserss } =
+    useGetAllUserssQuery(undefined);
   const { data: TotalUsers } = useGetAllUsersQuery(undefined);
-  const { data: NewUsers, isLoading: isLoadingNewUsers } = useGetNewAllUsersQuery(undefined);
+  const { data: NewUsers, isLoading: isLoadingNewUsers } =
+    useGetNewAllUsersQuery(undefined);
   const { data: ActiveUsers, isLoading: isLoadingActiveUsers } =
     useGetAllActiveUsersQuery(undefined);
 
   const [deleteUser, { isLoading: isLoadingDelete }] = useDeleteUserMutation();
-  const [triggerGetUserDetails, { data: UserDetails, isLoading: isLoadingUserDetails }] =
-    useLazyGetUserDetailsQuery();
+  const [
+    triggerGetUserDetails,
+    { data: UserDetails, isLoading: isLoadingUserDetails },
+  ] = useLazyGetUserDetailsQuery();
 
   useEffect(() => {
     setAllUsers(Userss?.users || []);
   }, [Userss]);
 
   const filteredUsers = useMemo(() => {
-    return allUsers.filter((u) => u.name.toLowerCase().includes(search.toLowerCase()));
+    return allUsers.filter((u) =>
+      u.name.toLowerCase().includes(search.toLowerCase())
+    );
   }, [allUsers, search]);
 
   useEffect(() => {
@@ -105,8 +113,15 @@ export default function User() {
       try {
         await deleteUser(id).unwrap();
         toast.success("User deleted successfully", { position: "top-center" });
-      } catch (error: any) {
-        toast.error(error?.message || "Error deleting user", { position: "top-center" });
+      } catch (error) {
+        if (typeof error === "object" && error !== null && "data" in error) {
+          const err = error as { data?: { message?: string } };
+          toast(err.data?.message || "Failed to update car. Please try again.");
+        } else if (error instanceof Error) {
+          toast(error.message);
+        } else {
+          toast("Unexpected error");
+        }
       }
     },
     [deleteUser]
@@ -150,12 +165,17 @@ export default function User() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div className="flex items-center gap-3 flex-wrap">
-              <button className="sm:hidden text-gray-800" onClick={() => setMenuOpen(true)}>
+              <button
+                className="sm:hidden text-gray-800"
+                onClick={() => setMenuOpen(true)}
+              >
                 <Menu size={28} />
               </button>
 
               <div>
-                <h2 className="text-xl md:text-2xl font-semibold">User management</h2>
+                <h2 className="text-xl md:text-2xl font-semibold">
+                  User management
+                </h2>
                 <div className="text-xs md:text-sm text-slate-800 mt-1">
                   Manage users, leases, payments and activity
                 </div>
@@ -184,7 +204,11 @@ export default function User() {
               title="Total Users"
               value={
                 isLoadingUserss ? (
-                  <ClipLoader size={18} color="black" loading={isLoadingUserss} />
+                  <ClipLoader
+                    size={18}
+                    color="black"
+                    loading={isLoadingUserss}
+                  />
                 ) : (
                   TotalUsers?.users || 0
                 )
@@ -197,7 +221,11 @@ export default function User() {
               title="New Users"
               value={
                 isLoadingNewUsers ? (
-                  <ClipLoader size={18} color="black" loading={isLoadingNewUsers} />
+                  <ClipLoader
+                    size={18}
+                    color="black"
+                    loading={isLoadingNewUsers}
+                  />
                 ) : (
                   NewUsers?.users?.length || 0
                 )
@@ -210,7 +238,11 @@ export default function User() {
               title="Active Users"
               value={
                 isLoadingActiveUsers ? (
-                  <ClipLoader size={18} color="black" loading={isLoadingActiveUsers} />
+                  <ClipLoader
+                    size={18}
+                    color="black"
+                    loading={isLoadingActiveUsers}
+                  />
                 ) : (
                   ActiveUsers?.users?.length || 0
                 )
@@ -264,13 +296,18 @@ export default function User() {
                               {u?.name}
                             </div>
                             <div className="text-xs text-slate-800 truncate max-w-[160px]">
-                              Member since {u?.createdAt ? formatDate(u.createdAt) : "N/A"}
+                              Member since{" "}
+                              {u?.createdAt ? formatDate(u.createdAt) : "N/A"}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-2 text-slate-800 truncate">{u?.email}</td>
-                      <td className="py-4 px-2 text-center">{u?.totalLeases ?? 0}</td>
+                      <td className="py-4 px-2 text-slate-800 truncate">
+                        {u?.email}
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        {u?.totalLeases ?? 0}
+                      </td>
                       <td className="py-4 px-2 text-center">
                         <button
                           title="Delete"
@@ -281,7 +318,11 @@ export default function User() {
                           }}
                         >
                           {isLoadingDelete ? (
-                            <ClipLoader size={18} color="black" loading={isLoadingDelete} />
+                            <ClipLoader
+                              size={18}
+                              color="black"
+                              loading={isLoadingDelete}
+                            />
                           ) : (
                             <Trash2 className="w-4 h-4" />
                           )}
@@ -424,7 +465,11 @@ function UserDetailCard({
           className="flex justify-between items-center w-full text-sm md:text-base text-black mb-2"
         >
           Completed leases ({UserDetails?.completedLeases?.length})
-          {showCompleted ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          {showCompleted ? (
+            <ChevronDown size={16} />
+          ) : (
+            <ChevronRight size={16} />
+          )}
         </button>
         {showCompleted && (
           <div className="space-y-3">

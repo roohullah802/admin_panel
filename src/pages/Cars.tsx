@@ -23,7 +23,6 @@ import {
 import { toast } from "react-toastify";
 import UpdateCarModal from "./UpdateCarModal";
 
-
 function IconCard({
   title,
   value,
@@ -41,12 +40,16 @@ function IconCard({
     <div className="p-2 sm:p-2 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100">
       <div className="flex items-center gap-3">
         {Icon && (
-          <Icon className={`${col} text-white rounded-3xl p-2 size-8 sm:size-10`} />
+          <Icon
+            className={`${col} text-white rounded-3xl p-2 size-8 sm:size-10`}
+          />
         )}
         <div>
           <div className="text-xs sm:text-sm text-black">{title}</div>
           <div className="text-lg sm:text-2xl font-semibold">{value}</div>
-          {sub && <div className="text-[10px] sm:text-xs text-green-600">{sub}</div>}
+          {sub && (
+            <div className="text-[10px] sm:text-xs text-green-600">{sub}</div>
+          )}
         </div>
       </div>
     </div>
@@ -61,7 +64,6 @@ export default function CarPage() {
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [editingCar, setEditingCar] = useState<any>(null);
 
-
   const {
     data: TotalCars,
     isLoading,
@@ -75,7 +77,6 @@ export default function CarPage() {
 
   const [deleteCar] = useDeleteCarListingMutation();
   const cardetails = CarDetails?.carDetails;
-
 
   const filteredCars = useMemo(() => {
     return TotalCars?.cars?.filter((c: any) =>
@@ -103,8 +104,15 @@ export default function CarPage() {
         } else {
           toast.error(response.message || "Failed to delete car");
         }
-      } catch (error: any) {
-        toast.error(error?.message || "Error deleting car");
+      } catch (error) {
+        if (typeof error === "object" && error !== null && "data" in error) {
+          const err = error as { data?: { message?: string } };
+          toast(err.data?.message || "Error deleting car");
+        } else if (error instanceof Error) {
+          toast(error.message);
+        } else {
+          toast("Unexpected error");
+        }
       } finally {
         setDeletingId(null);
       }
@@ -112,12 +120,14 @@ export default function CarPage() {
     [deleteCar, refetch, selectedCarId]
   );
 
-  const handleEditClick = useCallback((car: any) => {
-    setEditingCar(car);
-    setOpenModal(true);
-    console.log(editingCar);
-    
-  }, [editingCar]);
+  const handleEditClick = useCallback(
+    (car: any) => {
+      setEditingCar(car);
+      setOpenModal(true);
+      console.log(editingCar);
+    },
+    [editingCar]
+  );
 
   return (
     <div className="relative bg-gray-100 flex min-h-screen overflow-hidden">
@@ -434,14 +444,14 @@ export default function CarPage() {
       </div>
 
       {/* Update Car Modal */}
-       {editingCar && (
+      {editingCar && (
         <UpdateCarModal
           isOpen={openModal}
           onClose={() => {
             setOpenModal(false);
             setEditingCar(null);
           }}
-          carId={editingCar._id}    
+          carId={editingCar._id}
           initialData={editingCar}
         />
       )}

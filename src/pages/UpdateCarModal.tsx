@@ -90,7 +90,7 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const airCondition = formData.airCondition === "yes" ? true : false
+      const airCondition = formData.airCondition === "yes" ? true : false;
       try {
         const payload = {
           modelName: formData.modelName,
@@ -114,18 +114,19 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
           allowedMilleage: Number(formData.allowedMilleage),
         };
 
-        
-        await updateCar({carId, ...payload}).unwrap();
+        await updateCar({ carId, ...payload }).unwrap();
         toast.success("🚗 Car updated successfully!");
         onUpdated?.();
         onClose();
       } catch (error) {
-       if (error instanceof Error) {
-         const message =
-          error.message ||
-          "Failed to update car. Please try again.";
-        toast.error(`❌ ${message}`);
-       }
+        if (typeof error === "object" && error !== null && "data" in error) {
+          const err = error as { data?: { message?: string } };
+          toast(err.data?.message || "Failed to update car. Please try again.");
+        } else if (error instanceof Error) {
+          toast(error.message);
+        } else {
+          toast("Unexpected error");
+        }
       }
     },
     [formData, updateCar, carId, onClose, onUpdated]

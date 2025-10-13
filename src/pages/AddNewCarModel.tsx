@@ -139,9 +139,13 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
         console.log("Response:", res);
         onClose();
       } catch (error) {
-        if (error instanceof Error) {
-          const message =error?.message || "Failed to add car. Please try again.";
-        toast.error(`❌ ${message}`)
+        if (typeof error === "object" && error !== null && "data" in error) {
+          const err = error as { data?: { message?: string } };
+          toast(err.data?.message || "Something went wrong");
+        } else if (error instanceof Error) {
+          toast(error.message);
+        } else {
+          toast("Unexpected error");
         }
       }
     },
@@ -327,7 +331,6 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
-
 
 const Input = ({
   label,

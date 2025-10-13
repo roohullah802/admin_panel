@@ -43,10 +43,13 @@ export function SignupForm() {
           });
         }
       } catch (error) {
-        if (error instanceof Error) {
-          toast(error?.message, {
-            position: "top-center",
-          });
+        if (typeof error === "object" && error !== null && "data" in error) {
+          const err = error as { data?: { message?: string } };
+          toast(err.data?.message || "Something went wrong");
+        } else if (error instanceof Error) {
+          toast(error.message);
+        } else {
+          toast("Unexpected error");
         }
       } finally {
         setIsloading(false);
