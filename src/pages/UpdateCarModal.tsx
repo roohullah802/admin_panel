@@ -1,11 +1,14 @@
-import React, { useCallback, useState } from "react";
-import { X, Upload } from "lucide-react";
-import { useAddNewCarMutation } from "@/redux-toolkit-store/slices/rtk/apiSlices";
+import React, { useCallback, useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { useUpdateCarMutation } from "@/redux-toolkit-store/slices/rtk/apiSlices";
 import { toast } from "react-toastify";
 
-interface AddNewCarModalProps {
+interface UpdateCarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  carId: string;
+  initialData?: Partial<FormDataType>;
+  onUpdated?: () => void;
 }
 
 interface FormDataType {
@@ -28,11 +31,15 @@ interface FormDataType {
   transmission: string;
   fuelType: string;
   description: string;
-  images: File[];
-  brandImage: File[] | null;
 }
 
-const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
+const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
+  isOpen,
+  onClose,
+  carId,
+  initialData,
+  onUpdated,
+}) => {
   const [formData, setFormData] = useState<FormDataType>({
     modelName: "",
     brand: "",
@@ -53,11 +60,20 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
     transmission: "",
     fuelType: "",
     description: "",
-    images: [],
-    brandImage: [],
   });
 
-  const [addNewCar, { isLoading }] = useAddNewCarMutation();
+  const [updateCar, { isLoading }] = useUpdateCarMutation();
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData((prev) => ({
+        ...prev,
+        ...Object.fromEntries(
+          Object.entries(initialData).map(([key, val]) => [key, val ?? ""])
+        ),
+      }));
+    }
+  }, [initialData]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -71,96 +87,62 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, files } = e.target;
-    if (!files) return;
-
-    if (name === "images") {
-      const selectedFiles = Array.from(files).slice(0, 10);
-      setFormData((prev) => ({
-        ...prev,
-        images: selectedFiles,
-      }));
-    } else if (name === "brandImage") {
-      const selec = Array.from(files).slice(0, 1);
-      setFormData((prev) => ({
-        ...prev,
-        brandImage: selec,
-      }));
-    }
-  };
-
-  const appendNumber = (fd: FormData, key: string, value: string) => {
-    if (value && !isNaN(Number(value))) {
-      fd.append(key, String(Number(value)));
-    }
-  };
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      const airCondition = formData.airCondition === "yes" ? true : false
       try {
-        const payload = new FormData();
+        const payload = {
+          modelName: formData.modelName,
+          brand: formData.brand.trim(),
+          color: formData.color.trim(),
+          transmission: formData.transmission,
+          fuelType: formData.fuelType,
+          description: formData.description.trim(),
+          airCondition: airCondition,
+          year: Number(formData.year),
+          weeklyRate: Number(formData.weeklyRate),
+          passengers: Number(formData.passengers),
+          doors: Number(formData.doors),
+          price: Number(formData.price),
+          maxPower: Number(formData.maxPower),
+          mph: Number(formData.mph),
+          topSpeed: Number(formData.topSpeed),
+          tax: Number(formData.tax),
+          pricePerDay: Number(formData.pricePerDay),
+          initialMileage: Number(formData.initialMileage),
+          allowedMilleage: Number(formData.allowedMilleage),
+        };
 
-        const airConditionValue =
-          formData.airCondition.toLowerCase() === "yes" ? "true" : "false";
-
-        payload.append("modelName", formData.modelName.trim());
-        payload.append("brand", formData.brand.trim());
-        payload.append("color", formData.color.trim());
-        payload.append("transmission", formData.transmission);
-        payload.append("fuelType", formData.fuelType);
-        payload.append("description", formData.description.trim());
-        payload.append("airCondition", airConditionValue);
-
-        appendNumber(payload, "year", formData.year);
-        appendNumber(payload, "weeklyRate", formData.weeklyRate);
-        appendNumber(payload, "passengers", formData.passengers);
-        appendNumber(payload, "doors", formData.doors);
-        appendNumber(payload, "price", formData.price);
-        appendNumber(payload, "maxPower", formData.maxPower);
-        appendNumber(payload, "mph", formData.mph);
-        appendNumber(payload, "topSpeed", formData.topSpeed);
-        appendNumber(payload, "tax", formData.tax);
-        appendNumber(payload, "pricePerDay", formData.pricePerDay);
-        appendNumber(payload, "initialMileage", formData.initialMileage);
-        appendNumber(payload, "allowedMilleage", formData.allowedMilleage);
-
-        formData.images.forEach((img) => {
-          payload.append("images", img);
-        });
-
-        formData.brandImage?.forEach((img) => {
-          payload.append("brandImage", img);
-        });
-
-        const res = await addNewCar(payload).unwrap();
-        toast.success("✅ Car added successfully!");
-        console.log("Response:", res);
+        
+        const res = await updateCar({carId, ...payload}).unwrap();
+        toast.success("🚗 Car updated successfully!");
+        onUpdated?.();
         onClose();
       } catch (err: any) {
-        console.error("Add Car Error:", err);
+        console.error("Update Car Error:", err);
         const message =
           err?.data?.message ||
           err?.error ||
-          "Failed to add car. Please try again.";
+          "Failed to update car. Please try again.";
         toast.error(`❌ ${message}`);
       }
     },
-    [formData, addNewCar, onClose]
+    [formData, updateCar, carId, onClose, onUpdated]
   );
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed  inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl h-[95vh] overflow-hidden flex flex-col mx-4 sm:mx-6">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">Add New Car</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Update Car</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800"
+            className="text-gray-500 hover:text-gray-800 transition"
+            aria-label="Close Modal"
           >
             <X size={20} />
           </button>
@@ -170,7 +152,6 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <form onSubmit={handleSubmit} className="space-y-4 pb-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Basic fields */}
               <Input
                 label="Car Name"
                 name="modelName"
@@ -287,21 +268,6 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* File Uploads */}
-            <FileUpload
-              label="Click to upload car images (max 10)"
-              name="images"
-              file={formData.images}
-              onChange={handleFileChange}
-              multiple
-            />
-            <FileUpload
-              label="Click to upload brand logo"
-              name="brandImage"
-              file={formData.brandImage}
-              onChange={handleFileChange}
-            />
-
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-6">
               <button
@@ -320,7 +286,7 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
                     : "bg-blue-800 hover:bg-blue-900"
                 }`}
               >
-                {isLoading ? "Adding..." : "Add Car"}
+                {isLoading ? "Updating..." : "Update Car"}
               </button>
             </div>
           </form>
@@ -330,15 +296,23 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-
-const Input = ({
+// ---------- Reusable Input ----------
+interface InputProps {
+  label: string;
+  name: string;
+  value: string | number;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  placeholder?: string;
+  type?: string;
+}
+const Input: React.FC<InputProps> = ({
   label,
   name,
   value,
   onChange,
   placeholder,
   type = "text",
-}: any) => (
+}) => (
   <div>
     <label className="block text-sm text-gray-600 mb-1">{label}</label>
     <input
@@ -353,7 +327,21 @@ const Input = ({
   </div>
 );
 
-const Select = ({ label, name, value, onChange, options }: any) => (
+// ---------- Reusable Select ----------
+interface SelectProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
+  options: { label: string; value: string }[];
+}
+const Select: React.FC<SelectProps> = ({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+}) => (
   <div>
     <label className="block text-sm text-gray-600 mb-1">{label}</label>
     <select
@@ -364,7 +352,7 @@ const Select = ({ label, name, value, onChange, options }: any) => (
       required
     >
       <option value="">Select</option>
-      {options.map((opt: any) => (
+      {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
           {opt.label}
         </option>
@@ -373,43 +361,4 @@ const Select = ({ label, name, value, onChange, options }: any) => (
   </div>
 );
 
-const FileUpload = ({
-  label,
-  name,
-  file,
-  onChange,
-  multiple = false,
-}: {
-  label: string;
-  name: string;
-  file: File[] | File | null;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  multiple?: boolean;
-}) => (
-  <div className="border-2 border-dashed border-blue-400 rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 transition">
-    <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-      <Upload size={24} className="text-blue-600" />
-      <span className="text-blue-600 font-medium text-sm">{label}</span>
-      <span className="text-gray-400 text-xs">PNG, JPG up to 50MB</span>
-      <input
-        type="file"
-        name={name}
-        multiple={multiple}
-        accept="image/*"
-        className="hidden"
-        onChange={onChange}
-      />
-    </label>
-    {Array.isArray(file) && file.length > 0 ? (
-      <p className="text-xs mt-2 text-gray-500">
-        {file.length} file(s) selected
-      </p>
-    ) : (
-      file && (
-        <p className="text-xs mt-2 text-gray-500">{(file as File).name}</p>
-      )
-    )}
-  </div>
-);
-
-export default AddNewCarModal;
+export default UpdateCarModal;

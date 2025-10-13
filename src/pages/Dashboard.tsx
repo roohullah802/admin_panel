@@ -17,7 +17,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import type { RootState } from "@/redux-toolkit-store/store/store";
 import { useEffect, useMemo, useState } from "react";
 import { greetWithTime } from "@/lib/greetings";
@@ -31,7 +31,6 @@ import {
 import ClipLoader from "react-spinners/ClipLoader";
 import { formatDate } from "@/lib/formatDate";
 import Nav from "./Nav";
-import { clearUserData } from "@/redux-toolkit-store/slices/userSlice/userSlice";
 
 interface ActivityTypes {
   action: string;
@@ -66,6 +65,7 @@ export default function Dashboard() {
   const { isLoggedIn, userData } = useSelector(
     (state: RootState) => state.user
   );
+
   const navigate = useNavigate();
   const { data: Users, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
   const { data: Cars, isLoading: isLoadingCars } = useGetAllCarsQuery(undefined);

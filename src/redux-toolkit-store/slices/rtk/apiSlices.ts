@@ -16,7 +16,6 @@ export const apiSlice = createApi({
     },
   }),
   endpoints: (builder) => ({
-
     getAllUsers: builder.query({
       query: () => "/totalUsers",
     }),
@@ -33,7 +32,6 @@ export const apiSlice = createApi({
       query: () => "/recent-cars",
     }),
 
-  
     getNewAllUsers: builder.query({
       query: () => "/new-users",
     }),
@@ -53,7 +51,6 @@ export const apiSlice = createApi({
       }),
     }),
 
-  
     totalCarss: builder.query({
       query: () => "/total-cars-for-car-management",
     }),
@@ -74,7 +71,6 @@ export const apiSlice = createApi({
       }),
     }),
 
-   
     setFaqs: builder.mutation({
       query: (body) => ({
         url: "/set-faqs",
@@ -90,7 +86,6 @@ export const apiSlice = createApi({
       }),
     }),
 
- 
     getOneWeekUsers: builder.query({
       query: () => "/new-users",
     }),
@@ -100,9 +95,24 @@ export const apiSlice = createApi({
     getTotalUsers: builder.query({
       query: () => "/all/users",
     }),
+    getAllComplains: builder.query({
+      query: () => "/user-complains",
+    }),
+    getTransactions: builder.query({
+      query:()=> '/transactions'
+    }),
+    updateCar: builder.mutation({
+      query:({carId, ...body})=>({
+        url:`/update-car/${carId}`,
+        method:'PATCH',
+        body
+      })
+    })
+
+
+
   }),
 });
-
 
 export const {
   useGetAllUsersQuery,
@@ -116,7 +126,7 @@ export const {
   useDeleteUserMutation,
   useLazyGetUserDetailsQuery,
   useTotalCarssQuery,
-  useGetCarDetailsQuery,
+  useLazyGetCarDetailsQuery,
   useDeleteCarListingMutation,
   useAddNewCarMutation,
   useSetFaqsMutation,
@@ -124,4 +134,7 @@ export const {
   useGetOneWeekUsersQuery,
   useGetActiveUsersQuery,
   useGetTotalUsersQuery,
+  useGetAllComplainsQuery,
+  useGetTransactionsQuery,
+  useUpdateCarMutation
 } = apiSlice;

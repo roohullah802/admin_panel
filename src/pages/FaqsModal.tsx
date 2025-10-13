@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Loader2, FileText } from "lucide-react";
 import { useSetFaqsMutation } from "@/redux-toolkit-store/slices/rtk/apiSlices";
 import { toast } from "react-toastify";
 
@@ -46,22 +46,15 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
         answer: formData.answer.trim(),
       };
 
-      // 🔥 API Call
       await setFaqss(payload).unwrap();
 
-      toast.success("FAQ added successfully!");
+      toast.success("✅ FAQ added successfully!");
 
-      // ✅ Add to local list
       setFaqs((prev) => [
         ...prev,
-        {
-          id: prev.length + 1,
-          question: payload.question,
-          answer: payload.answer,
-        },
+        { id: prev.length + 1, question: payload.question, answer: payload.answer },
       ]);
 
-      // ✅ Reset form
       setFormData({ question: "", answer: "" });
     } catch (error: any) {
       console.error("Add FAQ Error:", error);
@@ -76,22 +69,31 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[9999]">
+      <div className="bg-white rounded-2xl shadow-xl w-[90%] max-w-lg relative overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">FAQs</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X size={22} />
-          </button>
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition"
+        >
+          <X size={18} />
+        </button>
+
+        {/* Icon and Title */}
+        <div className="flex flex-col items-center mt-6">
+          <div className="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mb-3">
+            <FileText size={28} className="text-blue-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-800">Frequently Asked Questions</h2>
+          <p className="text-gray-500 text-sm mb-4">Manage or view FAQs easily.</p>
         </div>
 
-        {/* Body */}
-        <div className="p-5">
-          {/* Admin Add FAQ Form */}
+        {/* Scrollable Body */}
+        <div className="p-5 max-h-[65vh] overflow-y-auto">
+          {/* Admin Form */}
           {isAdmin && (
             <form onSubmit={handleSubmit} className="mb-6 space-y-3">
-              <h3 className="font-semibold text-gray-700 mb-1">Add New FAQ</h3>
+              <h3 className="font-semibold text-gray-700">Add New FAQ</h3>
               <input
                 type="text"
                 name="question"
@@ -110,10 +112,10 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`px-5 py-2 rounded-lg text-white flex items-center justify-center gap-2 ${
+                className={`px-5 py-2 rounded-lg text-white flex items-center justify-center gap-2 w-full ${
                   isLoading
                     ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-800 hover:bg-blue-900"
+                    : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {isLoading ? (
@@ -139,7 +141,11 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
                   className="flex justify-between items-center w-full px-4 py-3 text-left font-medium text-gray-800"
                 >
                   {faq.question}
-                  {openIndex === index ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  {openIndex === index ? (
+                    <ChevronUp size={18} />
+                  ) : (
+                    <ChevronDown size={18} />
+                  )}
                 </button>
                 {openIndex === index && (
                   <div className="px-4 pb-3 text-sm text-gray-600 border-t pt-2">
@@ -149,8 +155,18 @@ const FaqModal: React.FC<FaqModalProps> = ({ open, onClose, isAdmin = false }) =
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500">No FAQs yet.</p>
+            <p className="text-center text-gray-500">No FAQs added yet.</p>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t flex justify-center">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
