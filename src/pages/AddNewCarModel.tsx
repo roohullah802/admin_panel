@@ -138,13 +138,11 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
         toast.success("✅ Car added successfully!");
         console.log("Response:", res);
         onClose();
-      } catch (err: any) {
-        console.error("Add Car Error:", err);
-        const message =
-          err?.data?.message ||
-          err?.error ||
-          "Failed to add car. Please try again.";
-        toast.error(`❌ ${message}`);
+      } catch (error) {
+        if (error instanceof Error) {
+          const message =error?.message || "Failed to add car. Please try again.";
+        toast.error(`❌ ${message}`)
+        }
       }
     },
     [formData, addNewCar, onClose]
@@ -232,7 +230,7 @@ const AddNewCarModal: React.FC<AddNewCarModalProps> = ({ isOpen, onClose }) => {
                   type="number"
                   label={field.label}
                   name={field.name}
-                  value={(formData as any)[field.name]}
+                  value={formData[field.name as keyof typeof formData]}
                   onChange={handleChange}
                 />
               ))}

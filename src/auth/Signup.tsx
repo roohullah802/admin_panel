@@ -43,11 +43,11 @@ export function SignupForm() {
           });
         }
       } catch (error) {
-        toast(error?.data?.message, {
-          position: "top-center",
-        });
-
-        console.log("error", error);
+        if (error instanceof Error) {
+          toast(error?.message, {
+            position: "top-center",
+          });
+        }
       } finally {
         setIsloading(false);
       }

@@ -29,13 +29,6 @@ export function VerificationCode() {
   const [verifyEmail] = useVerifyEmailMutation();
 
   useEffect(() => {
-    const isCodeComplete = code.every((digit) => digit !== "");
-    if (isCodeComplete) {
-      handleVerify(code.join(""));
-    }
-  }, [code]);
-
-  useEffect(() => {
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
@@ -97,15 +90,24 @@ export function VerificationCode() {
           navigate("/login");
         }
       } catch (error) {
-        toast(error.data.message, {
-          position: "top-center",
-        });
+        if (error instanceof Error) {
+          toast(error?.message, {
+            position: "top-center",
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     },
     [code, email, verifyEmail, navigate]
   );
+
+  useEffect(() => {
+    const isCodeComplete = code.every((digit) => digit !== "");
+    if (isCodeComplete) {
+      handleVerify(code.join(""));
+    }
+  }, [code, handleVerify]);
 
   const handleManualVerify = () => {
     handleVerify();
@@ -156,7 +158,9 @@ export function VerificationCode() {
               {code.map((digit, index) => (
                 <input
                   key={index}
-                  ref={(el) => (inputRefs.current[index] = el)}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -164,7 +168,7 @@ export function VerificationCode() {
                   value={digit}
                   onChange={(e) => handleCodeChange(e.target.value, index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
-                  onFocus={(e) => e.target.select()} // Select text on focus
+                  onFocus={(e) => e.target.select()}
                   className="w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                 />
               ))}

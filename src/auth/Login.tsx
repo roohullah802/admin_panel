@@ -44,16 +44,16 @@ export function LoginForm() {
           console.log(response);
         }
       } catch (error) {
-        toast(error?.data?.message, {
+       if (error instanceof Error) {
+         toast(error?.message, {
           position: "top-center",
-        });
-
-        console.log("error", error);
+        })
+       }
       } finally {
         setIsloading(false);
       }
     },
-    [email, password, navigate, loginAdmin]
+    [email, password, navigate, loginAdmin, dispatch]
   );
 
   return (

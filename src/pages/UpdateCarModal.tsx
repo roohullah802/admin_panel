@@ -115,17 +115,17 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
         };
 
         
-        const res = await updateCar({carId, ...payload}).unwrap();
+        await updateCar({carId, ...payload}).unwrap();
         toast.success("🚗 Car updated successfully!");
         onUpdated?.();
         onClose();
-      } catch (err: any) {
-        console.error("Update Car Error:", err);
-        const message =
-          err?.data?.message ||
-          err?.error ||
+      } catch (error) {
+       if (error instanceof Error) {
+         const message =
+          error.message ||
           "Failed to update car. Please try again.";
         toast.error(`❌ ${message}`);
+       }
       }
     },
     [formData, updateCar, carId, onClose, onUpdated]
@@ -213,7 +213,7 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
                   type="number"
                   label={field.label}
                   name={field.name}
-                  value={(formData as any)[field.name]}
+                  value={formData[field.name as keyof typeof formData]}
                   onChange={handleChange}
                 />
               ))}

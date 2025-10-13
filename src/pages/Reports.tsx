@@ -27,10 +27,16 @@ const ReportsPage: React.FC = () => {
   const [lineCounts, setLineCounts] = useState<Record<string, number>>({});
   const [isNavOpen, setIsNavOpen] = useState(false);
 
-  const { data, error, isLoading, isError } = useGetAllComplainsQuery(undefined);
-  const complains: Complain[] = useMemo(()=> data?.complains || [],[data?.complains])
+  const { data, error, isLoading, isError } =
+    useGetAllComplainsQuery(undefined);
+  const complains: Complain[] = useMemo(
+    () => data?.complains || [],
+    [data?.complains]
+  );
 
-  const descriptionRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
+  const descriptionRefs = useRef<Record<string, HTMLParagraphElement | null>>(
+    {}
+  );
 
   useEffect(() => {
     const newLineCounts: Record<string, number> = {};
@@ -54,7 +60,9 @@ const ReportsPage: React.FC = () => {
       {/* Sidebar */}
       <div
         className={`fixed md:static z-30 transition-transform duration-300 ${
-          isNavOpen ? "translate-x-0 h-full" : "-translate-x-full md:translate-x-0"
+          isNavOpen
+            ? "translate-x-0 h-full"
+            : "-translate-x-full md:translate-x-0"
         }`}
       >
         <Nav />
@@ -101,7 +109,9 @@ const ReportsPage: React.FC = () => {
             <AlertTriangle className="w-8 h-8 mb-2" />
             <p className="font-semibold">Failed to load complaints</p>
             <p className="text-sm text-gray-500">
-              {(error as any)?.data?.message || "Please try again later."}
+              {error instanceof Error
+                ? error.message
+                : "Please try again later."}
             </p>
           </div>
         )}
@@ -117,7 +127,7 @@ const ReportsPage: React.FC = () => {
         {/* Complaints Grid */}
         {!isLoading && !isError && complains.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {complains.map((complain) => {
+            {complains.map((complain: any) => {
               const isExpanded = expanded[complain._id];
               const lines = lineCounts[complain._id] || 1;
 
@@ -130,7 +140,7 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-center mb-2">
                     <User className="w-5 h-5 text-blue-600 mr-2" />
                     <span className="font-semibold text-gray-800">
-                      {complain?.userId?.name|| "Unknown"}
+                      {complain?.userId?.name || "Unknown"}
                     </span>
                   </div>
 
@@ -153,7 +163,9 @@ const ReportsPage: React.FC = () => {
                         size={20}
                       />
                       <p
-                        ref={(el) => (descriptionRefs.current[complain._id] = el)}
+                        ref={(el) =>{
+                          descriptionRefs.current[complain._id] = el
+                        }}
                         className={`text-gray-700 text-sm leading-relaxed transition-all duration-200 ${
                           isExpanded ? "line-clamp-none" : "truncate"
                         }`}

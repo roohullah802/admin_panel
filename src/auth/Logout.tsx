@@ -28,9 +28,10 @@ const Logout: React.FC<LogoutProps> = ({ open, onClose, isAdmin = false }) => {
       setTimeout(() => {
         window.location.href = isAdmin ? "/login" : "/login";
       }, 500);
-    } catch (error: any) {
-      console.error("Logout Error:", error);
-      toast.error(error?.data?.message || "❌ Logout failed. Please try again.");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error?.message || "❌ Logout failed. Please try again.")
+      }
     }
   };
 

@@ -11,6 +11,22 @@ import Nav from "./Nav";
 import { useGetTransactionsQuery } from "@/redux-toolkit-store/slices/rtk/apiSlices";
 import { formatDate } from "@/lib/formatDate";
 
+interface Lease {
+  _id: string;
+  user: {
+    name: string;
+    email: string;
+    profile: string;
+  };
+  car: {
+    modelName: string;
+  };
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  status: "active" | "expired" | "pending";
+}
+
 
 const TransactionsPage: React.FC = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -121,7 +137,7 @@ const TransactionsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data?.leases.map((l) => (
+            {data?.leases.map((l: Lease) => (
               <tr
                 key={l._id}
                 className="border-b hover:bg-gray-50 transition-all duration-150"
