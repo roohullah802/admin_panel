@@ -65,14 +65,11 @@ export default function Dashboard() {
     const navigate = useNavigate();
   
     useEffect(() => {
-      const token = localStorage.getItem("token");
-  
+      const token = localStorage.getItem("token"); 
       if (!token || isTokenExpired(token)) {
         localStorage.removeItem("token");
         navigate("/login", { replace: true });
-      } else {
-        navigate("/", { replace: true });
-      }
+      } 
     }, [navigate]);
 
 
