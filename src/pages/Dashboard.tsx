@@ -31,6 +31,7 @@ import {
 import ClipLoader from "react-spinners/ClipLoader";
 import { formatDate } from "@/lib/formatDate";
 import Nav from "./Nav";
+import { isTokenExpired } from "@/lib/isTokenExpired";
 
 interface ActivityTypes {
   action: string;
@@ -59,6 +60,25 @@ const chartData = [
 ];
 
 export default function Dashboard() {
+
+
+    const navigate = useNavigate();
+  
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+  
+      if (!token || isTokenExpired(token)) {
+        localStorage.removeItem("token");
+        navigate("/login", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    }, [navigate]);
+
+
+
+
+
   const [search, setSearch] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
@@ -66,7 +86,6 @@ export default function Dashboard() {
     (state: RootState) => state.user
   );
 
-  const navigate = useNavigate();
   const { data: Users, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
   const { data: Cars, isLoading: isLoadingCars } = useGetAllCarsQuery(undefined);
   const { data: ActiveLeases, isLoading: isLoadingLeases } = useGetAllActiveLeasesQuery(undefined);

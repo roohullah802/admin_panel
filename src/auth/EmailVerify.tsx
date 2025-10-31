@@ -87,7 +87,7 @@ export function VerificationCode() {
 
         const response = await verifyEmail(data).unwrap();
         if (response.success) {
-          navigate("/login");
+          navigate("/sign-in");
         }
       } catch (error) {
         if (typeof error === "object" && error !== null && "data" in error) {
