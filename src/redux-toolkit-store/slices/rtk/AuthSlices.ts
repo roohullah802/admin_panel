@@ -1,14 +1,16 @@
 // src/slices/apiSlice.ts
-import type { RootState } from "@/redux-toolkit-store/store/store";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { Clerk } from "@clerk/clerk-js";
+
+const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+await clerk.load();
 
 export const authSlice = createApi({
   reducerPath: "auth",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://api.citycarcenters.com/api/v1/secure/route/admin",
-    prepareHeaders(headers, {getState}) {
-      const t = getState() as RootState;
-      const token = t.user.userData?.token;
+   async prepareHeaders(headers) {
+      const token = await clerk.session?.getToken();
       if (token) {
         headers.set("authorization", `Bearer ${token}`); 
       }

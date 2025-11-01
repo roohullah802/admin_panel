@@ -15,14 +15,13 @@ import { useState } from "react";
 import AddNewCarModal from "./AddNewCarModel";
 import FaqModal from "./FaqsModal";
 import PrivacyModal from "./PrivacyModal";
-import Logout from "@/auth/Logout";
+import { UserButton } from "@clerk/clerk-react";
 
 function Nav() {
   const [openOptions, setOpenOptions] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [logout, setLogout] = useState(false);
 
   return (
     <aside className="w-full h-full md:w-40 bg-gray-200 p-4 flex-shrink-0">
@@ -156,9 +155,9 @@ function Nav() {
           )}
         </div>
 
-        <NavLink
+        {/* <NavLink
           to={"/"}
-          onClick={()=> setLogout(true)}
+          onClick={()=> }
           className={({ isActive }) =>
             `${isActive ? "text-black mt-6" : "hover:text-black"}`
           }
@@ -169,7 +168,10 @@ function Nav() {
             <LogOut size={17} />
             <span className="text-[13px]">Logout</span>
           </div>
-        </NavLink>
+        </NavLink> */}
+        <div className={`flex absolute bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}>
+          <UserButton  afterSignOutUrl="/sign-in" />
+        </div>
       </nav>
       <AddNewCarModal isOpen={showModal} onClose={() => setShowModal(false)} />
 
@@ -183,11 +185,6 @@ function Nav() {
         open={privacyOpen}
         onClose={() => setPrivacyOpen(false)}
         isAdmin={true}
-      />
-      <Logout 
-      open={logout}
-      onClose={()=> setLogout(false)}
-      isAdmin={true}
       />
     </aside>
   );

@@ -1,14 +1,17 @@
-import type { RootState } from "@/redux-toolkit-store/store/store";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { Clerk } from "@clerk/clerk-js";
+
+const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+await clerk.load();
 
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://api.citycarcenters.com/api/v1/secure/route/admin",
     credentials: "include",
-    prepareHeaders: (headers, { getState }) => {
-      const t = getState() as RootState;
-      const token = t.user.userData?.token;
+    prepareHeaders: async (headers) => {
+      const token = await clerk.session?.getToken();
+
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       }
@@ -99,18 +102,15 @@ export const apiSlice = createApi({
       query: () => "/user-complains",
     }),
     getTransactions: builder.query({
-      query:()=> '/transactions'
+      query: () => "/transactions",
     }),
     updateCar: builder.mutation({
-      query:({carId, ...body})=>({
-        url:`/update-car/${carId}`,
-        method:'PATCH',
-        body
-      })
-    })
-
-
-
+      query: ({ carId, ...body }) => ({
+        url: `/update-car/${carId}`,
+        method: "PATCH",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -136,5 +136,5 @@ export const {
   useGetTotalUsersQuery,
   useGetAllComplainsQuery,
   useGetTransactionsQuery,
-  useUpdateCarMutation
+  useUpdateCarMutation,
 } = apiSlice;

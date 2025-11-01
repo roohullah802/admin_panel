@@ -16,10 +16,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { useNavigate } from "react-router-dom";
-import {  useSelector } from "react-redux";
-import type { RootState } from "@/redux-toolkit-store/store/store";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { greetWithTime } from "@/lib/greetings";
 import {
   useGetAllActiveLeasesQuery,
@@ -31,7 +28,7 @@ import {
 import ClipLoader from "react-spinners/ClipLoader";
 import { formatDate } from "@/lib/formatDate";
 import Nav from "./Nav";
-import { isTokenExpired } from "@/lib/isTokenExpired";
+import { useUser } from "@clerk/clerk-react";
 
 interface ActivityTypes {
   action: string;
@@ -60,39 +57,14 @@ const chartData = [
 ];
 
 export default function Dashboard() {
-
-
-    const navigate = useNavigate();
   
-    useEffect(() => {
-    const checkToken = () => {
-      const token = localStorage.getItem("persist:root");
-      console.log(token);
-      if (!token || isTokenExpired(token)) {
-        localStorage.removeItem("persist:root");
-        navigate("/login", { replace: true });
-      }
-    };
-
-    // Check immediately on load
-    checkToken();
-
-    // Check every 30 seconds
-    const interval = setInterval(checkToken, 30000);
-
-    return () => clearInterval(interval);
-  }, [navigate]);
-
-
-
-
-
   const [search, setSearch] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-  const { isLoggedIn, userData } = useSelector(
-    (state: RootState) => state.user
-  );
+  const {isSignedIn, isLoaded, user} = useUser();
+  console.log(isSignedIn, isLoaded, user);
+  
+
 
   const { data: Users, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
   const { data: Cars, isLoading: isLoadingCars } = useGetAllCarsQuery(undefined);
@@ -121,11 +93,6 @@ export default function Dashboard() {
     );
   }, [oneweekcars, search]);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/login");
-    }
-  }, [isLoggedIn, navigate]);
 
   const stats = [
     {
@@ -209,7 +176,7 @@ export default function Dashboard() {
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
           <h1 className="text-2xl font-bold">
-            {greetWithTime(userData?.name ? userData?.name : " ")}
+            {greetWithTime(user?.fullName ? user?.fullName : " ")}
           </h1>
           <input
             type="text"

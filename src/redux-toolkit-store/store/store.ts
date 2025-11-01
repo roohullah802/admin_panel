@@ -2,7 +2,6 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { authSlice } from "../slices/rtk/AuthSlices";
 import { apiSlice } from "../slices/rtk/apiSlices";
-import userReducer from "../slices/userSlice/userSlice";
 
 import {
   persistStore,
@@ -21,14 +20,12 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 const rootReducer = combineReducers({
   [authSlice.reducerPath]: authSlice.reducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
-  user: userReducer,
 });
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user"], // persist only user state (not API cache)
 };
 
 // Wrap reducer
