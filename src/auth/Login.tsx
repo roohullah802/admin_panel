@@ -32,11 +32,7 @@ export function LoginForm() {
         const data = { email, password };
         const response = await AdminLogin(data).unwrap();
         if (response.success) {
-          navigate("/verify-email", {
-            state: {
-              email: email,
-            },
-          });
+          navigate("/");
         }
       } catch (error) {
         if (typeof error === "object" && error !== null && "data" in error) {
