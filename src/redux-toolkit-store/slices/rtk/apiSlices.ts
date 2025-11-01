@@ -9,7 +9,6 @@ const baseQuery = fetchBaseQuery({
     try {
      
       const token = await window.Clerk?.session?.getToken();
-      console.log(token);
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       } else {
