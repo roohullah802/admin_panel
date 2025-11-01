@@ -65,12 +65,23 @@ export default function Dashboard() {
     const navigate = useNavigate();
   
     useEffect(() => {
-      const token = localStorage.getItem("token"); 
+    const checkToken = () => {
+      const token = localStorage.getItem("persist:root");
+      console.log(token);
       if (!token || isTokenExpired(token)) {
-        localStorage.removeItem("token");
+        localStorage.removeItem("persist:root");
         navigate("/login", { replace: true });
-      } 
-    }, [navigate]);
+      }
+    };
+
+    // Check immediately on load
+    checkToken();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkToken, 30000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
 
 
 
