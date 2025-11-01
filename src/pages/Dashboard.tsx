@@ -61,8 +61,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-  const {isSignedIn, isLoaded, user} = useUser();
-  console.log(isSignedIn, isLoaded, user);
+  const {user} = useUser();
   
 
 
@@ -84,7 +83,6 @@ export default function Dashboard() {
   const activity = UserActivity?.activities;
   const oneweekcars = OneWeekCars?.cars;
 
-  console.log(OneWeekCars);
   
 
   const filteredCars = useMemo(() => {
