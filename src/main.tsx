@@ -7,7 +7,7 @@ import { persistor, store } from "./redux-toolkit-store/store/store";
 import { PersistGate } from "redux-persist/integration/react";
 import {ClerkProvider} from '@clerk/clerk-react'
 
-const VITE_CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_Ym9sZC1kdWNrbGluZy03MC5jbGVyay5hY2NvdW50cy5kZXYk';
 
 if (!VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error('Missing Publishable Key')

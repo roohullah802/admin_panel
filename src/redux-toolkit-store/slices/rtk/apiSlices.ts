@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Clerk } from "@clerk/clerk-js";
 
-const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+const clerk = new Clerk('pk_test_Ym9sZC1kdWNrbGluZy03MC5jbGVyay5hY2NvdW50cy5kZXYk');
 await clerk.load();
 
 export const apiSlice = createApi({
