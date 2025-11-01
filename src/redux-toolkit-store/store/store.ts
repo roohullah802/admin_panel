@@ -1,6 +1,5 @@
 // src/store.ts
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import { authSlice } from "../slices/rtk/AuthSlices";
 import { apiSlice } from "../slices/rtk/apiSlices";
 
 import {
@@ -18,7 +17,6 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 
 // Combine reducers
 const rootReducer = combineReducers({
-  [authSlice.reducerPath]: authSlice.reducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
 });
 
@@ -39,7 +37,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authSlice.middleware, apiSlice.middleware),
+    }).concat( apiSlice.middleware),
 });
 
 // Persistor
