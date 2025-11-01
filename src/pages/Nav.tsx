@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Settings,
   Plus,
-  LogOut,
 } from "lucide-react";
 import { NavLink } from "react-router";
 import { useState } from "react";
