@@ -1,96 +1,158 @@
 // src/pages/AdminPendingUsers.tsx
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
+import Nav from "./Nav";
 
 interface PendingUser {
   _id: string;
   email: string;
-  name?: string;
+  name: string;
   role: string;
   status: string;
 }
 
+const MOCK_USERS: PendingUser[] = [
+  {
+    _id: "1",
+    name: "Roohullah Khan",
+    email: "roohullah.khan@example.com",
+    role: "admin",
+    status: "pending",
+  },
+  {
+    _id: "2",
+    name: "Muhammad Danyal",
+    email: "danyal@example.com",
+    role: "user",
+    status: "pending",
+  },
+  {
+    _id: "3",
+    name: "Sarah Ali",
+    email: "sarah.ali@example.com",
+    role: "admin",
+    status: "pending",
+  },
+  {
+    _id: "4",
+    name: "Ali Raza",
+    email: "ali.raza@example.com",
+    role: "user",
+    status: "approved",
+  },
+  {
+    _id: "5",
+    name: "Fatima Noor",
+    email: "fatima.noor@example.com",
+    role: "admin",
+    status: "pending",
+  },
+  {
+    _id: "6",
+    name: "Ahmed Shah",
+    email: "ahmed.shah@example.com",
+    role: "user",
+    status: "pending",
+  },
+  {
+    _id: "7",
+    name: "Hassan Javed",
+    email: "hassan.javed@example.com",
+    role: "admin",
+    status: "approved",
+  },
+];
+
 const AdminPendingUsers: React.FC = () => {
-  const [users, setUsers] = useState<PendingUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<PendingUser[]>(MOCK_USERS);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
-  const fetchPendingUsers = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("clerkToken");
-      const { data } = await axios.get(
-        "https://api.citycarcenters.com/api/v1/secure/route/admin/pending-admin-users",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+  const approveUser = (userId: string) => {
+    setApprovingId(userId);
+    setTimeout(() => {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId ? { ...u, status: "approved" } : u
+        )
       );
-      if (data.success) setUsers(data.users);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPendingUsers();
-  }, []);
-
-  const approveUser = async (userId: string) => {
-    try {
-      const token = localStorage.getItem("clerkToken");
-      await axios.patch(
-        `https://api.citycarcenters.com/api/v1/secure/route/admin/approve-user/${userId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchPendingUsers(); // refresh
-    } catch (error) {
-      console.error(error);
-    }
+      setApprovingId(null);
+    }, 1000); // simulate API delay
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Pending Admin Users</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : users.length === 0 ? (
-        <p>No pending users.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded shadow">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="text-left px-4 py-2">Name</th>
-                <th className="text-left px-4 py-2">Email</th>
-                <th className="text-left px-4 py-2">Role</th>
-                <th className="text-left px-4 py-2">Status</th>
-                <th className="text-left px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id} className="border-t">
-                  <td className="px-4 py-2">{user.name || "N/A"}</td>
-                  <td className="px-4 py-2">{user.email}</td>
-                  <td className="px-4 py-2 capitalize">{user.role}</td>
-                  <td className="px-4 py-2 capitalize">{user.status}</td>
-                  <td className="px-4 py-2">
+        <Nav/>
+      <h1 className="text-3xl font-extrabold mb-6 text-gray-800">
+        Pending Admin Users
+      </h1>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white rounded-lg shadow-lg border border-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-600 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-600 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-600 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-600 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr
+                key={user._id}
+                className="border-b hover:bg-gray-50 transition-colors duration-150"
+              >
+                <td className="px-6 py-4 text-gray-700">{user.name}</td>
+                <td className="px-6 py-4 text-gray-700">{user.email}</td>
+                <td className="px-6 py-4 capitalize">{user.role}</td>
+                <td className="px-6 py-4 capitalize">
+                  <span
+                    className={`px-2 py-1 rounded-full text-sm font-medium ${
+                      user.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {user.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 flex gap-2">
+                  {user.status === "pending" ? (
                     <button
-                      className="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600"
+                      className={`flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
+                        approvingId === user._id
+                          ? "opacity-70 cursor-not-allowed"
+                          : ""
+                      }`}
                       onClick={() => approveUser(user._id)}
+                      disabled={approvingId === user._id}
                     >
-                      Approve
+                      {approvingId === user._id ? (
+                        <ClipLoader color="white" size={16} />
+                      ) : (
+                        "Approve"
+                      )}
                     </button>
-                    {/* Optionally add Reject button */}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  ) : (
+                    <span className="text-green-700 font-medium">Approved</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

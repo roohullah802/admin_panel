@@ -154,20 +154,21 @@ function Nav() {
           )}
         </div>
 
-        {/* <NavLink
-          to={"/"}
-          onClick={()=> }
+
+
+        <NavLink
+          to={"/admin-approval-users"}
           className={({ isActive }) =>
-            `${isActive ? "text-black mt-6" : "hover:text-black"}`
+            `${isActive ? "text-black" : "hover:text-black"}`
           }
         >
-          <div
-            className={`flex absolute bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}
-          >
-            <LogOut size={17} />
-            <span className="text-[13px]">Logout</span>
+          <div className="flex justify-start items-center  rounded-lg p-2 text-left gap-2">
+            <Wallet size={17} />
+            <span className="text-[13px]">Approval</span>
           </div>
-        </NavLink> */}
+        </NavLink>
+
+      
         <div className={`flex absolute bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}>
           <UserButton  afterSignOutUrl="/sign-in" />
         </div>
