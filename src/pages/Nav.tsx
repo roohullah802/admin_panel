@@ -15,6 +15,7 @@ import AddNewCarModal from "./AddNewCarModel";
 import FaqModal from "./FaqsModal";
 import PrivacyModal from "./PrivacyModal";
 import { UserButton } from "@clerk/clerk-react";
+import { CheckCircle } from "lucide-react";
 
 function Nav() {
   const [openOptions, setOpenOptions] = useState(false);
@@ -163,14 +164,14 @@ function Nav() {
           }
         >
           <div className="flex justify-start items-center  rounded-lg p-2 text-left gap-2">
-            <Wallet size={17} />
+            <CheckCircle size={17} />
             <span className="text-[13px]">Approval</span>
           </div>
         </NavLink>
 
       
-        <div className={`flex absolute bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}>
-          <UserButton  afterSignOutUrl="/sign-in" />
+        <div className={`flex absolute mt-2 bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}>
+          <UserButton  />
         </div>
       </nav>
       <AddNewCarModal isOpen={showModal} onClose={() => setShowModal(false)} />
