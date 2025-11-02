@@ -8,6 +8,7 @@ import Reports from "./pages/Reports";
 import { ToastContainer } from "react-toastify";
 import WaitingApproval from "./pages/WaitingApproval";
 import AdminRoute from "./routes/AdminRoutes";
+import AdminPendingUsers from "./pages/AdminPendingUsers";
 
 
 function App() {
@@ -103,6 +104,22 @@ function App() {
               <>
               <SignedIn>
                 <WaitingApproval />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn/>
+              </SignedOut>
+              </>
+            }
+          />
+
+            <Route
+            path="/admin-approval-users"
+            element={
+              <>
+              <SignedIn>
+                <AdminRoute>
+                  <AdminPendingUsers />
+                </AdminRoute>
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>

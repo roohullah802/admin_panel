@@ -267,7 +267,7 @@ export default function Dashboard() {
       </main>
 
       {/* Recent Activity */}
-      <aside className="hidden lg:block w-60 bg-white shadow-lg p-4 flex-shrink-0">
+      <aside className="hidden lg:block w-60 bg-white shadow-lg p-4 flex-shrink-0 h-screen overflow-y-auto">
         <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
         {error && (
           <div className="w-full">
