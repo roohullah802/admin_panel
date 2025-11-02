@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
       console.log(token);
       
       if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`,);
       } else {
         console.warn("⚠️ No Clerk token found — user may not be signed in");
       }

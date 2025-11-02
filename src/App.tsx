@@ -6,6 +6,9 @@ import Cars from "./pages/Cars";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import { ToastContainer } from "react-toastify";
+import WaitingApproval from "./pages/WaitingApproval";
+import AdminRoute from "./routes/AdminRoutes";
+
 
 function App() {
   return (
@@ -23,7 +26,9 @@ function App() {
             element={
              <>
               <SignedIn>
-                <Dashboard />
+                <AdminRoute>
+                  <Dashboard />
+                </AdminRoute>
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>
@@ -36,7 +41,9 @@ function App() {
             element={
               <>
               <SignedIn>
-                <Users />
+               <AdminRoute>
+                 <Users />
+               </AdminRoute>
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>
@@ -49,7 +56,9 @@ function App() {
             element={
              <>
               <SignedIn>
-                <Cars />
+               <AdminRoute>
+                 <Cars />
+               </AdminRoute>
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>
@@ -62,7 +71,9 @@ function App() {
             element={
              <>
               <SignedIn>
-                <Transactions />
+                <AdminRoute>
+                  <Transactions />
+                </AdminRoute>
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>
@@ -75,7 +86,23 @@ function App() {
             element={
               <>
               <SignedIn>
-                <Reports />
+               <AdminRoute>
+                 <Reports />
+               </AdminRoute>
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn/>
+              </SignedOut>
+              </>
+            }
+          />
+
+          <Route
+            path="/waiting-approval"
+            element={
+              <>
+              <SignedIn>
+                <WaitingApproval />
               </SignedIn>
               <SignedOut>
                 <RedirectToSignIn/>
