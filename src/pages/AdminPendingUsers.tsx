@@ -101,7 +101,7 @@ const AdminPendingUsers: React.FC = () => {
           </div>
         ) : isError ? (
           <div className="text-red-500 font-medium">Failed to load data.</div>
-        ) : !data || data.length === 0 ? (
+        ) : !data?.users || data?.users?.length === 0 ? (
           <div className="text-gray-700 font-medium">No pending admins.</div>
         ) : (
           <div className="overflow-x-auto w-full bg-white rounded-lg shadow-lg border border-gray-200">
@@ -127,7 +127,7 @@ const AdminPendingUsers: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {data.map((user: PendingUser) => (
+                  {data?.users?.map((user: PendingUser) => (
                     <tr
                       key={user._id}
                       className="hover:bg-gray-50 transition-colors duration-150"
