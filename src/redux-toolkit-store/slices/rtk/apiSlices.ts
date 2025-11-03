@@ -14,10 +14,10 @@ const baseQuery = fetchBaseQuery({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`,);
       } else {
-        console.warn("⚠️ No Clerk token found — user may not be signed in");
+        console.warn("No Clerk token found — user may not be signed in");
       }
     } catch (err) {
-      console.error("❌ Error fetching Clerk token:", err);
+      console.error("Error fetching Clerk token:", err);
     }
 
     return headers;
@@ -46,6 +46,21 @@ export const apiSlice = createApi({
         method: "DELETE",
       }),
     }),
+    getAllAdminPendingApproval: builder.query({query: ()=> '/get-pending-admin-users'}),
+    adminApproval: builder.mutation({
+      query:(id)=>({
+        url: `/approve/${id}`,
+        method:"POST",
+      })
+    }),
+     adminDisApproval: builder.mutation({
+      query:(id)=>({
+        url: `/disApprove/${id}`,
+        method:"POST",
+      })
+    }),
+
+
 
     // ==== CARS ====
     totalCarss: builder.query({ query: () => "/total-cars-for-car-management" }),
@@ -123,4 +138,7 @@ export const {
   useGetAllComplainsQuery,
   useGetTransactionsQuery,
   useUpdateCarMutation,
+  useGetAllAdminPendingApprovalQuery,
+  useAdminApprovalMutation,
+  useAdminDisApprovalMutation
 } = apiSlice;

@@ -1,46 +1,55 @@
 // src/pages/AdminPendingUsers.tsx
 import React, { useState } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Check, XCircle } from "lucide-react";
 import Nav from "./Nav";
+import {
+  useAdminApprovalMutation,
+  useAdminDisApprovalMutation,
+  useGetAllAdminPendingApprovalQuery,
+} from "@/redux-toolkit-store/slices/rtk/apiSlices";
 
 interface PendingUser {
   _id: string;
-  email: string;
   name: string;
+  email: string;
   role: string;
   status: string;
 }
 
-// Mock data
-const MOCK_USERS: PendingUser[] = [
-  { _id: "1", name: "Roohullah Khan", email: "roohullah.khan@example.com", role: "admin", status: "pending" },
-  { _id: "2", name: "Muhammad Danyal", email: "danyal@example.com", role: "user", status: "pending" },
-  { _id: "3", name: "Sarah Ali", email: "sarah.ali@example.com", role: "admin", status: "pending" },
-  { _id: "4", name: "Ali Raza", email: "ali.raza@example.com", role: "user", status: "approved" },
-  { _id: "5", name: "Fatima Noor", email: "fatima.noor@example.com", role: "admin", status: "pending" },
-  { _id: "6", name: "Ahmed Shah", email: "ahmed.shah@example.com", role: "user", status: "pending" },
-  { _id: "7", name: "Hassan Javed", email: "hassan.javed@example.com", role: "admin", status: "approved" },
-  { _id: "8", name: "Ayesha Khan", email: "ayesha.khan@example.com", role: "admin", status: "pending" },
-  { _id: "9", name: "Bilal Ahmed", email: "bilal.ahmed@example.com", role: "user", status: "pending" },
-];
-
 const AdminPendingUsers: React.FC = () => {
-  const [users, setUsers] = useState<PendingUser[]>(MOCK_USERS);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
 
-  // Simulate API call to approve user
-  const approveUser = (userId: string) => {
-    setApprovingId(userId);
-    setTimeout(() => {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === userId ? { ...u, status: "approved" } : u
-        )
-      );
-      setApprovingId(null);
-    }, 1000);
+
+  const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery(undefined);
+
+
+  const [AdminApproval] = useAdminApprovalMutation();
+  const [AdminDisApproval] = useAdminDisApprovalMutation();
+
+  const handleApprove = async (id: string) => {
+    setActionId(id);
+    try {
+      await AdminApproval(id).unwrap();
+      refetch(); 
+    } catch (err) {
+      console.error("Approval error:", err);
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleDisapprove = async (id: string) => {
+    setActionId(id);
+    try {
+      await AdminDisApproval(id).unwrap();
+      refetch(); 
+    } catch (err) {
+      console.error("Disapproval error:", err);
+    } finally {
+      setActionId(null);
+    }
   };
 
   return (
@@ -85,71 +94,110 @@ const AdminPendingUsers: React.FC = () => {
           Pending Admin Users
         </h1>
 
-        {/* Table container with scroll */}
-        <div className="overflow-x-auto w-full bg-white rounded-lg shadow-lg border border-gray-200">
-          <div className="max-h-[80vh] overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user._id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="px-6 py-4 text-gray-700">{user.name}</td>
-                    <td className="px-6 py-4 text-gray-700">{user.email}</td>
-                    <td className="px-6 py-4 capitalize">{user.role}</td>
-                    <td className="px-6 py-4 capitalize">
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm font-medium ${
-                          user.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      {user.status === "pending" ? (
-                        <button
-                          className={`flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                            approvingId === user._id ? "opacity-70 cursor-not-allowed" : ""
-                          }`}
-                          onClick={() => approveUser(user._id)}
-                          disabled={approvingId === user._id}
-                        >
-                          {approvingId === user._id ? (
-                            <ClipLoader color="white" size={16} />
-                          ) : (
-                            "Approve"
-                          )}
-                        </button>
-                      ) : (
-                        <span className="text-green-700 font-medium">Approved</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Loading and error states */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <ClipLoader size={40} />
           </div>
-        </div>
+        ) : isError ? (
+          <div className="text-red-500 font-medium">Failed to load data.</div>
+        ) : !data || data.length === 0 ? (
+          <div className="text-gray-700 font-medium">No pending admins.</div>
+        ) : (
+          <div className="overflow-x-auto w-full bg-white rounded-lg shadow-lg border border-gray-200">
+            <div className="max-h-[80vh] overflow-y-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {data.map((user: PendingUser) => (
+                    <tr
+                      key={user._id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 text-gray-700">{user.name}</td>
+                      <td className="px-6 py-4 text-gray-700">{user.email}</td>
+                      <td className="px-6 py-4 capitalize">{user.role}</td>
+                      <td className="px-6 py-4 capitalize">
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm font-medium ${
+                            user.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 flex gap-2">
+                        {user.status === "pending" && (
+                          <>
+                            <button
+                              className={`flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
+                                actionId === user._id
+                                  ? "opacity-70 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() => handleApprove(user._id)}
+                              disabled={actionId === user._id}
+                            >
+                              {actionId === user._id ? (
+                                <ClipLoader color="white" size={16} />
+                              ) : (
+                                <>
+                                  <Check size={16} /> Approve
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
+                                actionId === user._id
+                                  ? "opacity-70 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() => handleDisapprove(user._id)}
+                              disabled={actionId === user._id}
+                            >
+                              {actionId === user._id ? (
+                                <ClipLoader color="white" size={16} />
+                              ) : (
+                                <>
+                                  <XCircle size={16} /> Remove
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
+                        {user.status === "approved" && (
+                          <span className="text-green-700 font-medium flex items-center gap-1">
+                            <Check size={16} /> Approved
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
