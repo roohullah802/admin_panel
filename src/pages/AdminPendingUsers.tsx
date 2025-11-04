@@ -24,8 +24,8 @@ const AdminPendingUsers: React.FC = () => {
 
   const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery({});
 
-  const [AdminApproval] = useAdminApprovalMutation();
-  const [AdminDisApproval] = useAdminDisApprovalMutation();
+  const [AdminApproval,{isLoading: isLoadingApproval}] = useAdminApprovalMutation();
+  const [AdminDisApproval, {isLoading: isLoadingDisApproval}] = useAdminDisApprovalMutation();
 
 
   React.useEffect(() => {
@@ -173,7 +173,7 @@ const AdminPendingUsers: React.FC = () => {
                               }
                             >
                               {approvingId === user._id ? (
-                                <ClipLoader color="white" size={16} />
+                                <ClipLoader loading={isLoadingApproval} color="white" size={16} />
                               ) : (
                                 <>
                                   <Check size={16} /> Approve
@@ -195,7 +195,7 @@ const AdminPendingUsers: React.FC = () => {
                               }
                             >
                               {disapprovingId === user._id ? (
-                                <ClipLoader color="white" size={16} />
+                                <ClipLoader loading={isLoadingDisApproval} color="white" size={16} />
                               ) : (
                                 <>
                                   <XCircle size={16} /> Remove
