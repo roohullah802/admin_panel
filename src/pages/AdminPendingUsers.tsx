@@ -18,43 +18,67 @@ interface PendingUser {
 
 const AdminPendingUsers: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
-  const [disapprovingId, setDisapprovingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
 
-  const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery({});
-  const [AdminApproval, { isLoading: isLoadingApproval }] = useAdminApprovalMutation();
-  const [AdminDisApproval, { isLoading: isLoadingDisApproval }] = useAdminDisApprovalMutation();
+  const { data, isLoading, isError } = useGetAllAdminPendingApprovalQuery({});
+  const [adminApproval] = useAdminApprovalMutation();
+  const [adminDisApproval] = useAdminDisApprovalMutation();
 
+  // ✅ Initialize users from API
   useEffect(() => {
     if (data?.users) setLocalUsers(data.users);
   }, [data]);
 
+  // ✅ Approve user (changes UI instantly + updates DB)
   const handleApprove = async (id: string) => {
-    setApprovingId(id);
+    setLoadingId(id);
+
+    // Optimistic UI update
+    setLocalUsers((prev) =>
+      prev.map((u) =>
+        u._id === id ? { ...u, status: "approved" } : u
+      )
+    );
+
     try {
-      await AdminApproval(id).unwrap();
+      await adminApproval(id).unwrap();
+    } catch (error) {
+      console.error("Approval failed:", error);
+      // rollback UI if fails
+      setLocalUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, status: "pending" } : u
+        )
+      );
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // ✅ Remove user (changes UI instantly + updates DB)
+  const handleRemove = async (id: string) => {
+    setLoadingId(id);
+
+    // Optimistic UI update
+    setLocalUsers((prev) =>
+      prev.map((u) =>
+        u._id === id ? { ...u, status: "pending" } : u
+      )
+    );
+
+    try {
+      await adminDisApproval(id).unwrap();
+    } catch (error) {
+      console.error("Disapproval failed:", error);
+      // rollback UI if fails
       setLocalUsers((prev) =>
         prev.map((u) =>
           u._id === id ? { ...u, status: "approved" } : u
         )
       );
-    } catch (err) {
-      console.error("Approval error:", err);
     } finally {
-      setApprovingId(null);
-    }
-  };
-
-  const handleDisapprove = async (id: string) => {
-    setDisapprovingId(id);
-    try {
-      await AdminDisApproval(id).unwrap();
-      await refetch();
-    } catch (err) {
-      console.error("Disapproval error:", err);
-    } finally {
-      setDisapprovingId(null);
+      setLoadingId(null);
     }
   };
 
@@ -65,7 +89,7 @@ const AdminPendingUsers: React.FC = () => {
         <Nav />
       </div>
 
-      {/* Hamburger menu for mobile */}
+      {/* Hamburger for mobile */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setMenuOpen(true)}
@@ -100,6 +124,7 @@ const AdminPendingUsers: React.FC = () => {
           Pending Admin Users
         </h1>
 
+        {/* Loading and Error States */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <ClipLoader size={40} />
@@ -107,7 +132,7 @@ const AdminPendingUsers: React.FC = () => {
         ) : isError ? (
           <div className="text-red-500 font-medium">Failed to load data.</div>
         ) : !localUsers || localUsers.length === 0 ? (
-          <div className="text-gray-700 font-medium">No pending admins.</div>
+          <div className="text-gray-700 font-medium">No users found.</div>
         ) : (
           <div className="overflow-x-auto w-full bg-white rounded-lg shadow-lg border border-gray-200">
             <div className="max-h-[80vh] overflow-y-auto">
@@ -131,8 +156,9 @@ const AdminPendingUsers: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-gray-200">
-                  {localUsers.map((user: PendingUser) => (
+                  {localUsers.map((user) => (
                     <tr
                       key={user._id}
                       className="hover:bg-gray-50 transition-colors duration-150"
@@ -151,68 +177,36 @@ const AdminPendingUsers: React.FC = () => {
                           {user.status}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 flex gap-2">
-                        {/* Show Approve if pending */}
-                        {user.status === "pending" && (
+                        {user.status === "pending" ? (
                           <button
-                            className={`flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                              approvingId === user._id
-                                ? "opacity-70 cursor-not-allowed"
-                                : ""
-                            }`}
                             onClick={() => handleApprove(user._id)}
-                            disabled={
-                              approvingId === user._id ||
-                              disapprovingId === user._id
-                            }
+                            disabled={loadingId === user._id}
+                            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
-                            {approvingId === user._id ? (
-                              <ClipLoader
-                                loading={isLoadingApproval}
-                                color="white"
-                                size={16}
-                              />
+                            {loadingId === user._id ? (
+                              <ClipLoader color="white" size={16} />
                             ) : (
                               <>
                                 <Check size={16} /> Approve
                               </>
                             )}
                           </button>
-                        )}
-
-                        {/* Show Remove if approved admin */}
-                        {user.status === "approved" && user.role === "admin" && (
+                        ) : (
                           <button
-                            className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                              disapprovingId === user._id
-                                ? "opacity-70 cursor-not-allowed"
-                                : ""
-                            }`}
-                            onClick={() => handleDisapprove(user._id)}
-                            disabled={
-                              approvingId === user._id ||
-                              disapprovingId === user._id
-                            }
+                            onClick={() => handleRemove(user._id)}
+                            disabled={loadingId === user._id}
+                            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
-                            {disapprovingId === user._id ? (
-                              <ClipLoader
-                                loading={isLoadingDisApproval}
-                                color="white"
-                                size={16}
-                              />
+                            {loadingId === user._id ? (
+                              <ClipLoader color="white" size={16} />
                             ) : (
                               <>
                                 <XCircle size={16} /> Remove
                               </>
                             )}
                           </button>
-                        )}
-
-                        {/* Show Approved label for other approved users */}
-                        {user.status === "approved" && user.role !== "admin" && (
-                          <span className="text-green-700 font-medium flex items-center gap-1">
-                            <Check size={16} /> Approved
-                          </span>
                         )}
                       </td>
                     </tr>
