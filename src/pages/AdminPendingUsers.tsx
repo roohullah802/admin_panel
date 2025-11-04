@@ -1,4 +1,3 @@
-// src/pages/AdminPendingUsers.tsx
 import React, { useState } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Menu, X, Check, XCircle } from "lucide-react";
@@ -19,40 +18,34 @@ interface PendingUser {
 
 const AdminPendingUsers: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [actionId, setActionId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [disapprovingId, setDisapprovingId] = useState<string | null>(null);
 
-
-  const { data, isLoading, isError, refetch, error } = useGetAllAdminPendingApprovalQuery({});
-  console.log('fetched...', data);
-  console.log(error);
-  
-  
-
-
+  const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery({});
   const [AdminApproval] = useAdminApprovalMutation();
   const [AdminDisApproval] = useAdminDisApprovalMutation();
 
   const handleApprove = async (id: string) => {
-    setActionId(id);
+    setApprovingId(id);
     try {
       await AdminApproval(id).unwrap();
-      refetch(); 
+      await refetch();
     } catch (err) {
       console.error("Approval error:", err);
     } finally {
-      setActionId(null);
+      setApprovingId(null);
     }
   };
 
   const handleDisapprove = async (id: string) => {
-    setActionId(id);
+    setDisapprovingId(id);
     try {
       await AdminDisApproval(id).unwrap();
-      refetch(); 
+      await refetch();
     } catch (err) {
       console.error("Disapproval error:", err);
     } finally {
-      setActionId(null);
+      setDisapprovingId(null);
     }
   };
 
@@ -153,16 +146,20 @@ const AdminPendingUsers: React.FC = () => {
                       <td className="px-6 py-4 flex gap-2">
                         {user.status === "pending" && (
                           <>
+                            {/* Approve Button */}
                             <button
                               className={`flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                                actionId === user._id
+                                approvingId === user._id
                                   ? "opacity-70 cursor-not-allowed"
                                   : ""
                               }`}
                               onClick={() => handleApprove(user._id)}
-                              disabled={actionId === user._id}
+                              disabled={
+                                approvingId === user._id ||
+                                disapprovingId === user._id
+                              }
                             >
-                              {actionId === user._id ? (
+                              {approvingId === user._id ? (
                                 <ClipLoader color="white" size={16} />
                               ) : (
                                 <>
@@ -170,16 +167,21 @@ const AdminPendingUsers: React.FC = () => {
                                 </>
                               )}
                             </button>
+
+                            {/* Disapprove Button */}
                             <button
                               className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                                actionId === user._id
+                                disapprovingId === user._id
                                   ? "opacity-70 cursor-not-allowed"
                                   : ""
                               }`}
                               onClick={() => handleDisapprove(user._id)}
-                              disabled={actionId === user._id}
+                              disabled={
+                                approvingId === user._id ||
+                                disapprovingId === user._id
+                              }
                             >
-                              {actionId === user._id ? (
+                              {disapprovingId === user._id ? (
                                 <ClipLoader color="white" size={16} />
                               ) : (
                                 <>

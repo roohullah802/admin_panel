@@ -24,7 +24,6 @@ const TransactionsPage: React.FC = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   const { data } = useGetTransactionsQuery(undefined);
-  console.log(data?.leases);
   
 
   const toggleNav = useCallback(() => {
