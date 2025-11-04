@@ -22,7 +22,7 @@ const AdminPendingUsers: React.FC = () => {
   const [actionId, setActionId] = useState<string | null>(null);
 
 
-  const { data, isLoading, isError, refetch, error } = useGetAllAdminPendingApprovalQuery(undefined);
+  const { data, isLoading, isError, refetch, error } = useGetAllAdminPendingApprovalQuery({});
   console.log('fetched...', data);
   console.log(error);
   

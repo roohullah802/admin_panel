@@ -137,7 +137,7 @@ const TransactionsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data?.leases.map((l: Lease) => (
+            {data?.leases?.map((l: Lease) => (
               <tr
                 key={l._id}
                 className="border-b hover:bg-gray-50 transition-all duration-150"
@@ -146,16 +146,16 @@ const TransactionsPage: React.FC = () => {
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3 min-w-[140px]">
                     <img
-                      src={l.user.profile}
-                      alt={l.user.name}
+                      src={l?.user?.profile}
+                      alt={l?.user?.name}
                       className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <p className="font-medium text-gray-800 truncate max-w-[120px]">
-                        {l.user.name}
+                        {l?.user?.name}
                       </p>
                       <p className="text-xs text-gray-500 truncate max-w-[120px]">
-                        {l.user.email}
+                        {l?.user?.email}
                       </p>
                     </div>
                   </div>
@@ -163,28 +163,28 @@ const TransactionsPage: React.FC = () => {
 
                 {/* CAR MODEL */}
                 <td className="text-gray-700 px-3 max-w-[150px] truncate">
-                  {l.car.modelName}
+                  {l?.car?.modelName}
                 </td>
 
                 {/* LEASE DURATION */}
                 <td className="text-gray-700 px-3 whitespace-nowrap">
-                  {l?.startDate && l?.endDate ? `${Math.ceil((new Date(l.endDate).getTime() - new Date(l.startDate).getTime())/ (1000 * 60 * 60 * 24))} days` : '-'}
+                  {l?.startDate && l?.endDate ? `${Math.ceil((new Date(l?.endDate).getTime() - new Date(l?.startDate).getTime())/ (1000 * 60 * 60 * 24))} days` : '-'}
                 </td>
 
                 {/* PAYMENT AMOUNT */}
                 <td className="text-gray-700 px-3 whitespace-nowrap">
-                  ${l.totalAmount}
+                  ${l?.totalAmount}
                 </td>
 
 
                 {/* PAYMENT DATE */}
                 <td className="text-gray-700 px-3 whitespace-nowrap">
-                  {formatDate(l.startDate)}
+                  {formatDate(l?.startDate)}
                 </td>
 
                 {/* status */}
                  <td className={`${l.status === 'active' ? "text-green-700" : "text-red-500"} px-3 whitespace-nowrap`}>
-                  {l.status}
+                  {l?.status}
                 </td>
               </tr>
             ))}
