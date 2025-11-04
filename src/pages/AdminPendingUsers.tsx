@@ -20,16 +20,29 @@ const AdminPendingUsers: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [disapprovingId, setDisapprovingId] = useState<string | null>(null);
+  const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
 
   const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery({});
+
   const [AdminApproval] = useAdminApprovalMutation();
   const [AdminDisApproval] = useAdminDisApprovalMutation();
+
+
+  React.useEffect(() => {
+    if (data?.users) setLocalUsers(data.users);
+  }, [data]);
 
   const handleApprove = async (id: string) => {
     setApprovingId(id);
     try {
       await AdminApproval(id).unwrap();
-      await refetch();
+
+    
+      setLocalUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, status: "approved" } : u
+        )
+      );
     } catch (err) {
       console.error("Approval error:", err);
     } finally {
@@ -41,7 +54,7 @@ const AdminPendingUsers: React.FC = () => {
     setDisapprovingId(id);
     try {
       await AdminDisApproval(id).unwrap();
-      await refetch();
+      await refetch(); 
     } catch (err) {
       console.error("Disapproval error:", err);
     } finally {
@@ -98,7 +111,7 @@ const AdminPendingUsers: React.FC = () => {
           </div>
         ) : isError ? (
           <div className="text-red-500 font-medium">Failed to load data.</div>
-        ) : !data?.users || data?.users?.length === 0 ? (
+        ) : !localUsers || localUsers.length === 0 ? (
           <div className="text-gray-700 font-medium">No pending admins.</div>
         ) : (
           <div className="overflow-x-auto w-full bg-white rounded-lg shadow-lg border border-gray-200">
@@ -124,7 +137,7 @@ const AdminPendingUsers: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {data?.users?.map((user: PendingUser) => (
+                  {localUsers.map((user: PendingUser) => (
                     <tr
                       key={user._id}
                       className="hover:bg-gray-50 transition-colors duration-150"
