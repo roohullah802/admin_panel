@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Menu, X, Check, XCircle } from "lucide-react";
 import Nav from "./Nav";
@@ -23,12 +23,10 @@ const AdminPendingUsers: React.FC = () => {
   const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
 
   const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery({});
+  const [AdminApproval, { isLoading: isLoadingApproval }] = useAdminApprovalMutation();
+  const [AdminDisApproval, { isLoading: isLoadingDisApproval }] = useAdminDisApprovalMutation();
 
-  const [AdminApproval,{isLoading: isLoadingApproval}] = useAdminApprovalMutation();
-  const [AdminDisApproval, {isLoading: isLoadingDisApproval}] = useAdminDisApprovalMutation();
-
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (data?.users) setLocalUsers(data.users);
   }, [data]);
 
@@ -36,8 +34,6 @@ const AdminPendingUsers: React.FC = () => {
     setApprovingId(id);
     try {
       await AdminApproval(id).unwrap();
-
-    
       setLocalUsers((prev) =>
         prev.map((u) =>
           u._id === id ? { ...u, status: "approved" } : u
@@ -54,7 +50,7 @@ const AdminPendingUsers: React.FC = () => {
     setDisapprovingId(id);
     try {
       await AdminDisApproval(id).unwrap();
-      await refetch(); 
+      await refetch();
     } catch (err) {
       console.error("Disapproval error:", err);
     } finally {
@@ -104,7 +100,6 @@ const AdminPendingUsers: React.FC = () => {
           Pending Admin Users
         </h1>
 
-        {/* Loading and error states */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <ClipLoader size={40} />
@@ -157,54 +152,64 @@ const AdminPendingUsers: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 flex gap-2">
+                        {/* Show Approve if pending */}
                         {user.status === "pending" && (
-                          <>
-                            {/* Approve Button */}
-                            <button
-                              className={`flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                                approvingId === user._id
-                                  ? "opacity-70 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              onClick={() => handleApprove(user._id)}
-                              disabled={
-                                approvingId === user._id ||
-                                disapprovingId === user._id
-                              }
-                            >
-                              {approvingId === user._id ? (
-                                <ClipLoader loading={isLoadingApproval} color="white" size={16} />
-                              ) : (
-                                <>
-                                  <Check size={16} /> Approve
-                                </>
-                              )}
-                            </button>
-
-                            {/* Disapprove Button */}
-                            <button
-                              className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
-                                disapprovingId === user._id
-                                  ? "opacity-70 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              onClick={() => handleDisapprove(user._id)}
-                              disabled={
-                                approvingId === user._id ||
-                                disapprovingId === user._id
-                              }
-                            >
-                              {disapprovingId === user._id ? (
-                                <ClipLoader loading={isLoadingDisApproval} color="white" size={16} />
-                              ) : (
-                                <>
-                                  <XCircle size={16} /> Remove
-                                </>
-                              )}
-                            </button>
-                          </>
+                          <button
+                            className={`flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
+                              approvingId === user._id
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                            }`}
+                            onClick={() => handleApprove(user._id)}
+                            disabled={
+                              approvingId === user._id ||
+                              disapprovingId === user._id
+                            }
+                          >
+                            {approvingId === user._id ? (
+                              <ClipLoader
+                                loading={isLoadingApproval}
+                                color="white"
+                                size={16}
+                              />
+                            ) : (
+                              <>
+                                <Check size={16} /> Approve
+                              </>
+                            )}
+                          </button>
                         )}
-                        {user.status === "approved" && (
+
+                        {/* Show Remove if approved admin */}
+                        {user.status === "approved" && user.role === "admin" && (
+                          <button
+                            className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 ${
+                              disapprovingId === user._id
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                            }`}
+                            onClick={() => handleDisapprove(user._id)}
+                            disabled={
+                              approvingId === user._id ||
+                              disapprovingId === user._id
+                            }
+                          >
+                            {disapprovingId === user._id ? (
+                              <ClipLoader
+                                loading={isLoadingDisApproval}
+                                color="white"
+                                size={16}
+                              />
+                            ) : (
+                              <>
+                                <XCircle size={16} /> Remove
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        {/* Show Approved label for other approved users */}
+                        {user.status === "approved" && user.role !== "admin" && (
                           <span className="text-green-700 font-medium flex items-center gap-1">
                             <Check size={16} /> Approved
                           </span>
