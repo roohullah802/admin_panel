@@ -24,6 +24,8 @@ const TransactionsPage: React.FC = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   const { data } = useGetTransactionsQuery(undefined);
+  console.log(data?.leases);
+  
 
   const toggleNav = useCallback(() => {
     setIsNavOpen((prev) => !prev);
@@ -138,9 +140,7 @@ const TransactionsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {data?.leases?.map((l: Lease) => {
-                  console.log(l);
-                  
+                {data?.leases?.map((l: Lease) => {           
                   return (
                     <tr
                       key={l._id}
