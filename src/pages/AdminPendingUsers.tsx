@@ -21,20 +21,20 @@ const AdminPendingUsers: React.FC = () => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
 
-  const { data, isLoading, isError } = useGetAllAdminPendingApprovalQuery({});
-  const [adminApproval] = useAdminApprovalMutation();
-  const [adminDisApproval] = useAdminDisApprovalMutation();
+  const { data, isLoading, isError } = useGetAllAdminPendingApprovalQuery(undefined);
+  const [adminApproval, {isLoading: isLoadingApproval}] = useAdminApprovalMutation();
+  const [adminDisApproval, {isLoading: isLoadingDisApproval}] = useAdminDisApprovalMutation();
 
-  // ✅ Initialize users from API
+
   useEffect(() => {
     if (data?.users) setLocalUsers(data.users);
   }, [data]);
 
-  // ✅ Approve user (changes UI instantly + updates DB)
+
   const handleApprove = async (id: string) => {
     setLoadingId(id);
 
-    // Optimistic UI update
+
     setLocalUsers((prev) =>
       prev.map((u) =>
         u._id === id ? { ...u, status: "approved" } : u
@@ -45,7 +45,7 @@ const AdminPendingUsers: React.FC = () => {
       await adminApproval(id).unwrap();
     } catch (error) {
       console.error("Approval failed:", error);
-      // rollback UI if fails
+ 
       setLocalUsers((prev) =>
         prev.map((u) =>
           u._id === id ? { ...u, status: "pending" } : u
@@ -56,11 +56,11 @@ const AdminPendingUsers: React.FC = () => {
     }
   };
 
-  // ✅ Remove user (changes UI instantly + updates DB)
+
   const handleRemove = async (id: string) => {
     setLoadingId(id);
 
-    // Optimistic UI update
+
     setLocalUsers((prev) =>
       prev.map((u) =>
         u._id === id ? { ...u, status: "pending" } : u
@@ -71,7 +71,7 @@ const AdminPendingUsers: React.FC = () => {
       await adminDisApproval(id).unwrap();
     } catch (error) {
       console.error("Disapproval failed:", error);
-      // rollback UI if fails
+
       setLocalUsers((prev) =>
         prev.map((u) =>
           u._id === id ? { ...u, status: "approved" } : u
@@ -182,11 +182,11 @@ const AdminPendingUsers: React.FC = () => {
                         {user.status === "pending" ? (
                           <button
                             onClick={() => handleApprove(user._id)}
-                            disabled={loadingId === user._id}
+                          
                             className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader color="white" size={16} />
+                              <ClipLoader loading={isLoadingApproval} color="white" size={16} />
                             ) : (
                               <>
                                 <Check size={16} /> Approve
@@ -196,11 +196,11 @@ const AdminPendingUsers: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleRemove(user._id)}
-                            disabled={loadingId === user._id}
+                         
                             className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader color="white" size={16} />
+                              <ClipLoader loading={isLoadingDisApproval} color="white" size={16} />
                             ) : (
                               <>
                                 <XCircle size={16} /> Remove
