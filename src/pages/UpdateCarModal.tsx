@@ -9,6 +9,7 @@ interface UpdateCarModalProps {
   carId: string;
   initialData?: Partial<FormDataType>;
   onUpdated?: () => void;
+  refetch:()=> void;
 }
 
 interface FormDataType {
@@ -39,6 +40,7 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
   carId,
   initialData,
   onUpdated,
+  refetch
 }) => {
   const [formData, setFormData] = useState<FormDataType>({
     modelName: "",
@@ -118,6 +120,7 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
         toast.success("🚗 Car updated successfully!");
         onUpdated?.();
         onClose();
+        refetch()
       } catch (error) {
         if (typeof error === "object" && error !== null && "data" in error) {
           const err = error as { data?: { message?: string } };
@@ -129,7 +132,7 @@ const UpdateCarModal: React.FC<UpdateCarModalProps> = ({
         }
       }
     },
-    [formData, updateCar, carId, onClose, onUpdated]
+    [formData, updateCar, carId, onClose, onUpdated,refetch]
   );
 
   if (!isOpen) return null;

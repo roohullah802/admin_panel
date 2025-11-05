@@ -120,13 +120,13 @@ export default function CarPage() {
     [deleteCar, refetch, selectedCarId]
   );
 
-  const handleEditClick = useCallback(
-    (car: any) => {
+  const  handleEditClick = useCallback(
+  async  (car: any) => {
       setEditingCar(car);
       setOpenModal(true);
-      console.log(editingCar);
+      await refetch()
     },
-    [editingCar]
+    [refetch]
   );
 
   return (
@@ -447,6 +447,7 @@ export default function CarPage() {
       {editingCar && (
         <UpdateCarModal
           isOpen={openModal}
+          refetch={refetch}
           onClose={() => {
             setOpenModal(false);
             setEditingCar(null);
