@@ -21,14 +21,18 @@ const AdminPendingUsers: React.FC = () => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
 
-  const { data, isLoading, isError } = useGetAllAdminPendingApprovalQuery(undefined);
+  const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery(undefined);
   const [adminApproval, {isLoading: isLoadingApproval}] = useAdminApprovalMutation();
   const [adminDisApproval, {isLoading: isLoadingDisApproval}] = useAdminDisApprovalMutation();
 
 
   useEffect(() => {
+    async function fetchh() {
+      await refetch()
     if (data?.users) setLocalUsers(data.users);
-  }, [data]);
+    }
+    fetchh()
+  }, [data, refetch]);
 
 
   const handleApprove = async (id: string) => {
@@ -43,6 +47,7 @@ const AdminPendingUsers: React.FC = () => {
 
     try {
       await adminApproval(id).unwrap();
+      await refetch()
     } catch (error) {
       console.error("Approval failed:", error);
  
@@ -69,6 +74,7 @@ const AdminPendingUsers: React.FC = () => {
 
     try {
       await adminDisApproval(id).unwrap();
+      await refetch()
     } catch (error) {
       console.error("Disapproval failed:", error);
 
