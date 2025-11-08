@@ -71,7 +71,7 @@ export default function User() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState<string>("");
 
-  const { data: Userss, isLoading: isLoadingUserss } =
+  const { data: Userss, isLoading: isLoadingUserss,refetch } =
     useGetAllUserssQuery(undefined);
   const { data: TotalUsers } = useGetAllUsersQuery(undefined);
   const { data: NewUsers, isLoading: isLoadingNewUsers } =
@@ -84,6 +84,7 @@ export default function User() {
     triggerGetUserDetails,
     { data: UserDetails, isLoading: isLoadingUserDetails },
   ] = useLazyGetUserDetailsQuery();
+  
 
   useEffect(() => {
     setAllUsers(Userss?.users || []);
@@ -113,6 +114,7 @@ export default function User() {
       try {
         await deleteUser(id).unwrap();
         toast.success("User deleted successfully", { position: "top-center" });
+        await refetch();
       } catch (error) {
         if (typeof error === "object" && error !== null && "data" in error) {
           const err = error as { data?: { message?: string } };
