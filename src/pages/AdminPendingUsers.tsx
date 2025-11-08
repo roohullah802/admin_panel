@@ -154,9 +154,7 @@ const AdminPendingUsers: React.FC = () => {
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                      Status
-                    </th>
+                   
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
@@ -172,17 +170,7 @@ const AdminPendingUsers: React.FC = () => {
                       <td className="px-6 py-4 text-gray-700">{user.name}</td>
                       <td className="px-6 py-4 text-gray-700">{user.email}</td>
                       <td className="px-6 py-4 capitalize">{user.role}</td>
-                      <td className="px-6 py-4 capitalize">
-                        <span
-                          className={`px-2 py-1 rounded-full text-sm font-medium ${
-                            user.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {user.status}
-                        </span>
-                      </td>
+                     
 
                       <td className="px-6 py-4 flex gap-2">
                         {user.status === "pending" ? (

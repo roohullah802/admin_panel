@@ -126,7 +126,7 @@ export default function User() {
         }
       }
     },
-    [deleteUser]
+    [deleteUser,refetch]
   );
 
   const handleClick = useCallback(
