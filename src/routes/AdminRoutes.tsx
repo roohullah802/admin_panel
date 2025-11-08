@@ -60,7 +60,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   if (!userData) return <WaitingApproval />;
 
-  if (userData.status !== "approved" || userData.role !== "admin") {
+  if (userData.role !== "admin") {
     return <WaitingApproval />;
   }
 

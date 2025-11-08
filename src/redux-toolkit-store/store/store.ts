@@ -1,4 +1,3 @@
-// src/store.ts
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { apiSlice } from "../slices/rtk/apiSlices";
 
@@ -13,23 +12,23 @@ import {
   REGISTER,
 } from "redux-persist";
 
-import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import storage from "redux-persist/lib/storage"; 
 
-// Combine reducers
+
 const rootReducer = combineReducers({
   [apiSlice.reducerPath]: apiSlice.reducer,
 });
 
-// Persist config
+
 const persistConfig = {
   key: "root",
   storage,
 };
 
-// Wrap reducer
+
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// Configure store
+
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
