@@ -14,7 +14,7 @@ interface PendingUser {
   name: string;
   email: string;
   role: string;
-  status: string;
+  status: string; // "pending" | "approved"
 }
 
 const AdminPendingUsers: React.FC = () => {
@@ -30,7 +30,7 @@ const AdminPendingUsers: React.FC = () => {
   const [adminApproval] = useAdminApprovalMutation();
   const [adminDisApproval] = useAdminDisApprovalMutation();
 
-  // Fetch users initially and when refetched
+  // Fetch users initially
   useEffect(() => {
     async function fetchUsers() {
       const data = await refetch();
@@ -39,17 +39,16 @@ const AdminPendingUsers: React.FC = () => {
     if (isSignedIn) fetchUsers();
   }, [refetch, isSignedIn]);
 
-  // ✅ Handle Approval
+  // ✅ Handle Approval (toggle to approved)
   const handleApprove = async (id: string) => {
     setLoadingId(id);
-    setLocalUsers((prev) =>
-      prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
-    );
-
     try {
+      // Optimistic update
+      setLocalUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
+      );
+
       await adminApproval(id).unwrap();
-      const data = await refetch();
-      if (data?.data?.users) setLocalUsers(data.data.users);
     } catch (error) {
       console.error("Approval failed:", error);
       // Revert UI if failed
@@ -61,15 +60,22 @@ const AdminPendingUsers: React.FC = () => {
     }
   };
 
-  // ✅ Handle Disapproval (Remove)
+  // ✅ Handle Disapproval (toggle back to pending)
   const handleRemove = async (id: string) => {
     setLoadingId(id);
     try {
+      // Optimistic update
+      setLocalUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
+      );
+
       await adminDisApproval(id).unwrap();
-      // Immediately remove from local list (no need to wait for refetch)
-      setLocalUsers((prev) => prev.filter((u) => u._id !== id));
     } catch (error) {
       console.error("Disapproval failed:", error);
+      // Revert UI if failed
+      setLocalUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
+      );
     } finally {
       setLoadingId(null);
     }
@@ -142,6 +148,9 @@ const AdminPendingUsers: React.FC = () => {
                       Role
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -156,6 +165,15 @@ const AdminPendingUsers: React.FC = () => {
                       <td className="px-6 py-4 text-gray-700">{user.name}</td>
                       <td className="px-6 py-4 text-gray-700">{user.email}</td>
                       <td className="px-6 py-4 capitalize">{user.role}</td>
+                      <td
+                        className={`px-6 py-4 font-medium ${
+                          user.status === "approved"
+                            ? "text-green-600"
+                            : "text-yellow-600"
+                        }`}
+                      >
+                        {user.status}
+                      </td>
 
                       <td className="px-6 py-4 flex gap-2">
                         {user.status === "pending" ? (
