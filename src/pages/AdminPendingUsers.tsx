@@ -7,6 +7,7 @@ import {
   useAdminDisApprovalMutation,
   useGetAllAdminPendingApprovalQuery,
 } from "@/redux-toolkit-store/slices/rtk/apiSlices";
+import { useAuth } from "@clerk/clerk-react";
 
 interface PendingUser {
   _id: string;
@@ -20,68 +21,63 @@ const AdminPendingUsers: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [localUsers, setLocalUsers] = useState<PendingUser[]>([]);
+  const { isSignedIn } = useAuth();
 
-  const { data, isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery(undefined);
-  const [adminApproval, {isLoading: isLoadingApproval}] = useAdminApprovalMutation();
-  const [adminDisApproval, {isLoading: isLoadingDisApproval}] = useAdminDisApprovalMutation();
-
+  const { isLoading, isError, refetch } = useGetAllAdminPendingApprovalQuery(
+    {},
+    { skip: !isSignedIn }
+  );
+  const [adminApproval, { isLoading: isLoadingApproval }] =
+    useAdminApprovalMutation();
+  const [adminDisApproval, { isLoading: isLoadingDisApproval }] =
+    useAdminDisApprovalMutation();
 
   useEffect(() => {
     async function fetchh() {
-      await refetch()
-    if (data?.users) setLocalUsers(data.users);
+      const data = await refetch();
+      if (data?.data?.users) setLocalUsers(data?.data?.users);
     }
-    fetchh()
-  }, [data, refetch]);
-
+    fetchh();
+  }, [refetch]);
 
   const handleApprove = async (id: string) => {
     setLoadingId(id);
 
-
     setLocalUsers((prev) =>
-      prev.map((u) =>
-        u._id === id ? { ...u, status: "approved" } : u
-      )
+      prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
     );
 
     try {
       await adminApproval(id).unwrap();
-      await refetch()
+      const data = await refetch();
+      if (data?.data?.users) setLocalUsers(data?.data?.users);
     } catch (error) {
       console.error("Approval failed:", error);
- 
+
       setLocalUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, status: "pending" } : u
-        )
+        prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
       );
     } finally {
       setLoadingId(null);
     }
   };
 
-
   const handleRemove = async (id: string) => {
     setLoadingId(id);
 
-
     setLocalUsers((prev) =>
-      prev.map((u) =>
-        u._id === id ? { ...u, status: "pending" } : u
-      )
+      prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
     );
 
     try {
       await adminDisApproval(id).unwrap();
-      await refetch()
+      const data = await refetch();
+      if (data?.data?.users) setLocalUsers(data?.data?.users);
     } catch (error) {
       console.error("Disapproval failed:", error);
 
       setLocalUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, status: "approved" } : u
-        )
+        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
       );
     } finally {
       setLoadingId(null);
@@ -154,7 +150,7 @@ const AdminPendingUsers: React.FC = () => {
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Role
                     </th>
-                   
+
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
@@ -170,17 +166,19 @@ const AdminPendingUsers: React.FC = () => {
                       <td className="px-6 py-4 text-gray-700">{user.name}</td>
                       <td className="px-6 py-4 text-gray-700">{user.email}</td>
                       <td className="px-6 py-4 capitalize">{user.role}</td>
-                     
 
                       <td className="px-6 py-4 flex gap-2">
                         {user.status === "pending" ? (
                           <button
                             onClick={() => handleApprove(user._id)}
-                          
                             className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader loading={isLoadingApproval} color="white" size={16} />
+                              <ClipLoader
+                                loading={isLoadingApproval}
+                                color="white"
+                                size={16}
+                              />
                             ) : (
                               <>
                                 <Check size={16} /> Approve
@@ -190,11 +188,14 @@ const AdminPendingUsers: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleRemove(user._id)}
-                         
                             className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader loading={isLoadingDisApproval} color="white" size={16} />
+                              <ClipLoader
+                                loading={isLoadingDisApproval}
+                                color="white"
+                                size={16}
+                              />
                             ) : (
                               <>
                                 <XCircle size={16} /> Remove
