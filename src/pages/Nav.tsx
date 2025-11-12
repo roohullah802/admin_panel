@@ -8,6 +8,9 @@ import {
   ChevronRight,
   Settings,
   Plus,
+  HelpCircle,
+  Lock,
+  CheckCircle,
 } from "lucide-react";
 import { NavLink } from "react-router";
 import { useState } from "react";
@@ -15,7 +18,6 @@ import AddNewCarModal from "./AddNewCarModel";
 import FaqModal from "./FaqsModal";
 import PrivacyModal from "./PrivacyModal";
 import { UserButton } from "@clerk/clerk-react";
-import { CheckCircle } from "lucide-react";
 
 function Nav() {
   const [openOptions, setOpenOptions] = useState(false);
@@ -24,7 +26,8 @@ function Nav() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   return (
-    <aside className="w-full h-full md:w-40 bg-gray-200 p-4 flex-shrink-0">
+    <aside className="w-full h-full md:w-40 bg-gray-200 p-4 flex-shrink-0 relative">
+      {/* App Title */}
       <h2 className="text-xl font-bold mb-6">
         <i>
           Car<span className="text-blue-900">Lease</span>
@@ -32,15 +35,15 @@ function Nav() {
       </h2>
 
       <nav className="space-y-2 text-gray-500">
-        {/* Dashboard */}
-
+        {/* Add New Car */}
         <NavLink to={"/"} onClick={() => setShowModal(true)}>
           <div className="flex justify-start bg-blue-900 items-center rounded-[6px] hover:bg-blue-800 p-3 mb-2 text-left gap-8">
-            <span className="text-[10px] text-white ">Add New Car</span>
+            <span className="text-[10px] text-white">Add New Car</span>
             <Plus size={12} color="white" />
           </div>
         </NavLink>
 
+        {/* Dashboard */}
         <NavLink
           to={"/"}
           className={({ isActive }) =>
@@ -53,7 +56,7 @@ function Nav() {
           </div>
         </NavLink>
 
-        {/* Users */}
+        {/* User Management */}
         <NavLink
           to={"/users"}
           className={({ isActive }) =>
@@ -61,7 +64,7 @@ function Nav() {
           }
         >
           <div className="flex justify-start items-center rounded-lg p-2 text-left gap-2">
-            <User size={20} />{" "}
+            <User size={20} />
             <span className="text-[13px]">User Management</span>
           </div>
         </NavLink>
@@ -86,7 +89,7 @@ function Nav() {
             `${isActive ? "text-black" : "hover:text-black"}`
           }
         >
-          <div className="flex justify-start items-center  rounded-lg p-2 text-left gap-2">
+          <div className="flex justify-start items-center rounded-lg p-2 text-left gap-2">
             <Wallet size={17} />
             <span className="text-[13px]">Transactions</span>
           </div>
@@ -109,7 +112,7 @@ function Nav() {
         <div>
           <button
             onClick={() => setOpenOptions(!openOptions)}
-            className="w-full flex justify-between items-center hover:text-black text-[12px] rounded-lg p-2 text-left gap-2 "
+            className="w-full flex justify-between items-center hover:text-black text-[12px] rounded-lg p-2 text-left gap-2"
           >
             <div className="flex items-center gap-2">
               <Settings size={18} />
@@ -122,9 +125,10 @@ function Nav() {
             )}
           </button>
 
-          {/* Nested Links */}
+          {/* Nested Options */}
           {openOptions && (
             <div className="ml-6 mt-1 space-y-1 flex flex-col">
+              {/* Privacy Settings */}
               <NavLink
                 to="/"
                 onClick={() => setPrivacyOpen(true)}
@@ -133,11 +137,14 @@ function Nav() {
                     isActive
                       ? "text-black text-[12px]"
                       : "hover:text-black text-[12px]"
-                  }`
+                  } flex items-center gap-2`
                 }
               >
-                Privacy Settings
+                <Lock size={14} />
+                <span>Privacy Settings</span>
               </NavLink>
+
+              {/* FAQs */}
               <NavLink
                 to={"/"}
                 onClick={() => setFaqOpen(true)}
@@ -146,42 +153,38 @@ function Nav() {
                     isActive
                       ? "text-black text-[12px]"
                       : "hover:text-black text-[12px]"
-                  }`
+                  } flex items-center gap-2`
                 }
               >
-                FAQs
+                <HelpCircle size={14} />
+                <span>FAQs</span>
               </NavLink>
             </div>
           )}
         </div>
 
-
-
+        {/* Admin Approval */}
         <NavLink
           to={"/admin-approval-users"}
           className={({ isActive }) =>
             `${isActive ? "text-black" : "hover:text-black"}`
           }
         >
-          <div className="flex justify-start items-center  rounded-lg p-2 text-left gap-2">
+          <div className="flex justify-start items-center rounded-lg p-2 text-left gap-2">
             <CheckCircle size={17} />
             <span className="text-[13px]">Approval</span>
           </div>
         </NavLink>
 
-      
-        <div className={`flex absolute mt-2 bottom-2 justify-start items-center rounded-lg p-2 text-left gap-2`}>
-          <UserButton  />
+        {/* Clerk User Button */}
+        <div className="flex absolute bottom-2 left-4 items-center gap-2">
+          <UserButton />
         </div>
       </nav>
+
+      {/* Modals */}
       <AddNewCarModal isOpen={showModal} onClose={() => setShowModal(false)} />
-
-      <FaqModal
-        open={faqOpen}
-        onClose={() => setFaqOpen(false)}
-        isAdmin={true}
-      />
-
+      <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} isAdmin={true} />
       <PrivacyModal
         open={privacyOpen}
         onClose={() => setPrivacyOpen(false)}

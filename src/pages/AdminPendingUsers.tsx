@@ -13,8 +13,8 @@ interface PendingUser {
   _id: string;
   name: string;
   email: string;
-  role: string; // "user" | "admin"
-  status?: string; // optional
+  role: string;
+  status?: string;
 }
 
 const AdminPendingUsers: React.FC = () => {
@@ -30,7 +30,7 @@ const AdminPendingUsers: React.FC = () => {
   const [adminApproval] = useAdminApprovalMutation();
   const [adminDisApproval] = useAdminDisApprovalMutation();
 
-  // Fetch users initially
+  
   useEffect(() => {
     async function fetchUsers() {
       const data = await refetch();
@@ -39,11 +39,11 @@ const AdminPendingUsers: React.FC = () => {
     if (isSignedIn) fetchUsers();
   }, [refetch, isSignedIn]);
 
-  // ✅ Approve: make user an admin
+
   const handleApprove = async (id: string) => {
     setLoadingId(id);
     try {
-      // Optimistic UI update
+    
       setLocalUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, role: "admin" } : u))
       );
@@ -51,7 +51,7 @@ const AdminPendingUsers: React.FC = () => {
       await adminApproval(id).unwrap();
     } catch (error) {
       console.error("Approval failed:", error);
-      // Revert on error
+ 
       setLocalUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, role: "user" } : u))
       );
@@ -60,11 +60,11 @@ const AdminPendingUsers: React.FC = () => {
     }
   };
 
-  // ✅ Remove: revoke admin role
+
   const handleRemove = async (id: string) => {
     setLoadingId(id);
     try {
-      // Optimistic UI update
+
       setLocalUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, role: "user" } : u))
       );
@@ -72,7 +72,7 @@ const AdminPendingUsers: React.FC = () => {
       await adminDisApproval(id).unwrap();
     } catch (error) {
       console.error("Disapproval failed:", error);
-      // Revert on error
+    
       setLocalUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, role: "admin" } : u))
       );
