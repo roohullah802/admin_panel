@@ -13,8 +13,8 @@ interface PendingUser {
   _id: string;
   name: string;
   email: string;
-  role: string;
-  status: string; // "pending" | "approved"
+  role: string; // "user" | "admin"
+  status?: string; // optional
 }
 
 const AdminPendingUsers: React.FC = () => {
@@ -39,42 +39,42 @@ const AdminPendingUsers: React.FC = () => {
     if (isSignedIn) fetchUsers();
   }, [refetch, isSignedIn]);
 
-  // ✅ Handle Approval (toggle to approved)
+  // ✅ Approve: make user an admin
   const handleApprove = async (id: string) => {
     setLoadingId(id);
     try {
-      // Optimistic update
+      // Optimistic UI update
       setLocalUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
+        prev.map((u) => (u._id === id ? { ...u, role: "admin" } : u))
       );
 
       await adminApproval(id).unwrap();
     } catch (error) {
       console.error("Approval failed:", error);
-      // Revert UI if failed
+      // Revert on error
       setLocalUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
+        prev.map((u) => (u._id === id ? { ...u, role: "user" } : u))
       );
     } finally {
       setLoadingId(null);
     }
   };
 
-  // ✅ Handle Disapproval (toggle back to pending)
+  // ✅ Remove: revoke admin role
   const handleRemove = async (id: string) => {
     setLoadingId(id);
     try {
-      // Optimistic update
+      // Optimistic UI update
       setLocalUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
+        prev.map((u) => (u._id === id ? { ...u, role: "user" } : u))
       );
 
       await adminDisApproval(id).unwrap();
     } catch (error) {
       console.error("Disapproval failed:", error);
-      // Revert UI if failed
+      // Revert on error
       setLocalUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
+        prev.map((u) => (u._id === id ? { ...u, role: "admin" } : u))
       );
     } finally {
       setLoadingId(null);
@@ -148,9 +148,6 @@ const AdminPendingUsers: React.FC = () => {
                       Role
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -165,18 +162,8 @@ const AdminPendingUsers: React.FC = () => {
                       <td className="px-6 py-4 text-gray-700">{user.name}</td>
                       <td className="px-6 py-4 text-gray-700">{user.email}</td>
                       <td className="px-6 py-4 capitalize">{user.role}</td>
-                      <td
-                        className={`px-6 py-4 font-medium ${
-                          user.status === "approved"
-                            ? "text-green-600"
-                            : "text-yellow-600"
-                        }`}
-                      >
-                        {user.status}
-                      </td>
-
                       <td className="px-6 py-4 flex gap-2">
-                        {user.status === "pending" ? (
+                        {user.role === "user" ? (
                           <button
                             onClick={() => handleApprove(user._id)}
                             disabled={loadingId === user._id}
