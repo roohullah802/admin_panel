@@ -27,22 +27,21 @@ const AdminPendingUsers: React.FC = () => {
     {},
     { skip: !isSignedIn }
   );
-  const [adminApproval, { isLoading: isLoadingApproval }] =
-    useAdminApprovalMutation();
-  const [adminDisApproval, { isLoading: isLoadingDisApproval }] =
-    useAdminDisApprovalMutation();
+  const [adminApproval] = useAdminApprovalMutation();
+  const [adminDisApproval] = useAdminDisApprovalMutation();
 
+  // Fetch users initially and when refetched
   useEffect(() => {
-    async function fetchh() {
+    async function fetchUsers() {
       const data = await refetch();
-      if (data?.data?.users) setLocalUsers(data?.data?.users);
+      if (data?.data?.users) setLocalUsers(data.data.users);
     }
-    fetchh();
-  }, [refetch]);
+    if (isSignedIn) fetchUsers();
+  }, [refetch, isSignedIn]);
 
+  // ✅ Handle Approval
   const handleApprove = async (id: string) => {
     setLoadingId(id);
-
     setLocalUsers((prev) =>
       prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
     );
@@ -50,10 +49,10 @@ const AdminPendingUsers: React.FC = () => {
     try {
       await adminApproval(id).unwrap();
       const data = await refetch();
-      if (data?.data?.users) setLocalUsers(data?.data?.users);
+      if (data?.data?.users) setLocalUsers(data.data.users);
     } catch (error) {
       console.error("Approval failed:", error);
-
+      // Revert UI if failed
       setLocalUsers((prev) =>
         prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
       );
@@ -62,23 +61,15 @@ const AdminPendingUsers: React.FC = () => {
     }
   };
 
+  // ✅ Handle Disapproval (Remove)
   const handleRemove = async (id: string) => {
     setLoadingId(id);
-
-    setLocalUsers((prev) =>
-      prev.map((u) => (u._id === id ? { ...u, status: "pending" } : u))
-    );
-
     try {
       await adminDisApproval(id).unwrap();
-      const data = await refetch();
-      if (data?.data?.users) setLocalUsers(data?.data?.users);
+      // Immediately remove from local list (no need to wait for refetch)
+      setLocalUsers((prev) => prev.filter((u) => u._id !== id));
     } catch (error) {
       console.error("Disapproval failed:", error);
-
-      setLocalUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, status: "approved" } : u))
-      );
     } finally {
       setLoadingId(null);
     }
@@ -150,7 +141,6 @@ const AdminPendingUsers: React.FC = () => {
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Role
                     </th>
-
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
@@ -171,14 +161,11 @@ const AdminPendingUsers: React.FC = () => {
                         {user.status === "pending" ? (
                           <button
                             onClick={() => handleApprove(user._id)}
-                            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
+                            disabled={loadingId === user._id}
+                            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 disabled:opacity-70"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader
-                                loading={isLoadingApproval}
-                                color="white"
-                                size={16}
-                              />
+                              <ClipLoader color="white" size={16} />
                             ) : (
                               <>
                                 <Check size={16} /> Approve
@@ -188,14 +175,11 @@ const AdminPendingUsers: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleRemove(user._id)}
-                            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150"
+                            disabled={loadingId === user._id}
+                            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm transition-colors duration-150 disabled:opacity-70"
                           >
                             {loadingId === user._id ? (
-                              <ClipLoader
-                                loading={isLoadingDisApproval}
-                                color="white"
-                                size={16}
-                              />
+                              <ClipLoader color="white" size={16} />
                             ) : (
                               <>
                                 <XCircle size={16} /> Remove
