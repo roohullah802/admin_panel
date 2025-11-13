@@ -58,6 +58,21 @@ export const apiSlice = createApi({
         method:"POST",
       })
     }),
+    userDocuments: builder.query({
+      query: ()=> '/user/documents'
+    }),
+    adminApproveDocuments: builder.mutation({
+      query:(id)=>({
+        url: `/approve/documents/${id}`,
+        method: 'POST'
+      })
+    }),
+    adminRejectDocuments: builder.mutation({
+      query: (id)=> ({
+        url: `/reject/documents/${id}`,
+        method: 'POST'
+      })
+    }),
 
 
 
@@ -139,5 +154,8 @@ export const {
   useUpdateCarMutation,
   useGetAllAdminPendingApprovalQuery,
   useAdminApprovalMutation,
-  useAdminDisApprovalMutation
+  useAdminDisApprovalMutation,
+  useUserDocumentsQuery,
+  useAdminApproveDocumentsMutation,
+  useAdminRejectDocumentsMutation
 } = apiSlice;
