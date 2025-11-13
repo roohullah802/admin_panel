@@ -8,7 +8,7 @@ import Reports from "./pages/Reports";
 import { ToastContainer } from "react-toastify";
 import WaitingApproval from "./pages/WaitingApproval";
 import AdminRoute from "./routes/AdminRoutes";
-import AdminPendingUsers from "./pages/AdminPendingUsers";
+import Approval from "./pages/Approval";
 
 
 function App() {
@@ -118,7 +118,7 @@ function App() {
               <>
               <SignedIn>
                 <AdminRoute>
-                  <AdminPendingUsers />
+                  <Approval />
                 </AdminRoute>
               </SignedIn>
               <SignedOut>
